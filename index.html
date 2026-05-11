@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Allow-Copy v26.05.12</title>
+    <style>
+        body { font-family: -apple-system, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background-color: #f5f5f7; margin: 0; }
+        .card { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); text-align: center; max-width: 400px; }
+        h1 { font-size: 24px; margin-bottom: 10px; color: #1d1d1f; }
+        p { color: #86868b; font-size: 14px; line-height: 1.5; margin-bottom: 30px; }
+        .bookmarklet { display: inline-block; padding: 12px 24px; background-color: #32D74B; color: white; text-decoration: none; border-radius: 999px; font-weight: 600; cursor: grab; transition: transform 0.2s; border: none; }
+        .bookmarklet:hover { transform: scale(1.05); }
+        .tip { margin-top: 20px; font-size: 12px; color: #aeaeb2; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Allow-Copy v1.0</h1>
+        <p>복사가 안 되는 사이트에서 클릭 한 번으로<br>복사 방지를 해제하세요.</p>
+        
+        <!-- 이 버튼이 핵심입니다 -->
+        <a class="bookmarklet" href="javascript:/* allow-copy.js v26.05.12 */(function(){var f=0;function unlock(d){if(!d||!d.body)return;try{d.oncontextmenu=null;d.onselectstart=null;d.ondragstart=null;d.onmousedown=null;d.oncopy=null;['contextmenu','selectstart','copy','dragstart','mousedown'].forEach(function(ev){d.addEventListener(ev,function(e){var t=e.target.closest('button, a, input, select, [role=button]');if(!t){e.stopPropagation();}},true);});try{var st=d.createElement('style');st.textContent='*{user-select:text!important;-webkit-user-select:text!important;pointer-events:auto!important;}';d.head.appendChild(st);}catch(err){}var all=d.querySelectorAll('*');var batch=function(i){var end=Math.min(i+200,all.length);for(;i<end;i++){var el=all[i];el.style.userSelect='text';el.style.webkitUserSelect='text';el.oncontextmenu=null;el.onselectstart=null;if(el.hasAttribute('disabled')){el.removeAttribute('disabled');el.style.cursor='text';}if(el.classList.contains('ProseMirror')){el.contentEditable='true';}}if(end<all.length)(window.requestIdleCallback||setTimeout)(function(){batch(end);});};batch(0);}catch(e){f++;}}try{unlock(document);}catch(e){f++;}document.querySelectorAll('iframe').forEach(function(fr){try{unlock(fr.contentDocument);}catch(e){f++;}});try{var tDoc;try{tDoc=window.top.document||document;}catch(e){tDoc=document;}var old=tDoc.getElementById('__unlock_toast__');if(old)old.remove();var z=parseFloat(getComputedStyle(tDoc.documentElement).zoom)||1;var sc=1/z;var isWarn=f>0;var color=isWarn?'#FF9F0A':'#32D74B';var msg=isWarn?'일부 프레임 제한 ('+f+'개)':'복사 방지 해제 완료';var svgCheck='<svg width=14 height=14 viewBox=\'0 0 14 14\' fill=none xmlns=http://www.w3.org/2000/svg><path d=\'M2.5 7L5.5 10L11.5 4\' stroke=white stroke-width=1.8 stroke-linecap=round stroke-linejoin=round/></svg>';var svgWarn='<svg width=14 height=14 viewBox=\'0 0 14 14\' fill=none xmlns=http://www.w3.org/2000/svg><path d=\'M7 2L12.5 12H1.5L7 2Z\' stroke=white stroke-width=1.6 stroke-linecap=round stroke-linejoin=round/><path d=\'M7 6V8.5\' stroke=white stroke-width=1.6 stroke-linecap=round/><circle cx=7 cy=10.5 r=0.75 fill=white/></svg>';var t=tDoc.createElement('div');t.id='__unlock_toast__';t.style.cssText='position:fixed;top:24px;left:50%;transform:translateX(-50%) translateY(-10px) scale('+sc+');transform-origin:top center;z-index:2147483647;display:flex;align-items:center;gap:9px;background:rgba(28,28,30,0.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:0.5px solid rgba(255,255,255,0.12);border-radius:999px;padding:8px 16px 8px 8px;font-family:-apple-system,BlinkMacSystemFont,\'SF Pro Text\',sans-serif;font-size:13px;font-weight:500;color:#fff;letter-spacing:-0.01em;opacity:0;transition:opacity 0.2s ease,transform 0.2s ease;pointer-events:none;white-space:nowrap;';var ic=tDoc.createElement('span');ic.innerHTML=isWarn?svgWarn:svgCheck;ic.style.cssText='width:24px;height:24px;border-radius:50%;background:'+color+';display:flex;align-items:center;justify-content:center;flex-shrink:0;';var tx=tDoc.createElement('span');tx.textContent=msg;t.appendChild(ic);t.appendChild(tx);tDoc.body.appendChild(t);requestAnimationFrame(function(){t.style.opacity='1';t.style.transform='translateX(-50%) translateY(0) scale('+sc+')';});setTimeout(function(){t.style.opacity='0';t.style.transform='translateX(-50%) translateY(-10px) scale('+sc+')';setTimeout(function(){t.remove();},1500);}catch(err){}})();">
+            [Allow-Copy] 버튼을 북마크 바에 끌어다 놓으세요
+        </a>
+
+        <div class="tip">
+            사용법: 북마크 바가 안 보이면 <b>Ctrl+Shift+B</b>를 누르세요.
+        </div>
+    </div>
+</body>
+</html>
