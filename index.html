@@ -73,9 +73,9 @@
       transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease, transform 0.2s ease;
     }
     .bm-slot.highlight {
-      border-color: #0066cc;
-      background: rgba(0, 102, 204, 0.07);
-      color: #0066cc;
+      border-color: transparent;
+      background: rgba(0,0,0,0.05);
+      color: #3c3c3c;
       transform: scale(1.04);
     }
     .bm-sep {
@@ -626,6 +626,7 @@
       // Phase 4 — slot highlights
       setTimeout(() => {
         bmSlot.classList.add('highlight');
+        bmSlot.innerHTML = `<div style="width:12px;height:12px;border-radius:3px;background:#1d1d1f;flex-shrink:0;"></div>Allow-Copy`;
       }, 1180);
 
       // Phase 5 — cursor fades out
@@ -637,6 +638,7 @@
       // Phase 6 — slot un-highlights
       setTimeout(() => {
         bmSlot.classList.remove('highlight');
+        bmSlot.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Allow-Copy`;
       }, 1780);
 
       // Phase 7 — bookmark bar slides out, reset
