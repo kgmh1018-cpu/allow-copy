@@ -52,35 +52,56 @@ const fakeCursor  = document.getElementById('fakeCursor');
 const bookmarkBar = document.getElementById('bookmarkBar');
 const bmSlot      = document.getElementById('bmSlot');
 const dragBtn     = document.getElementById('bookmarklet-link');
+const dragGhost   = document.getElementById('drag-ghost');
+const pageEl      = document.querySelector('.page');
 
 const SLOT_EMPTY_HTML  = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Allow-Copy`;
 const SLOT_FILLED_HTML = `<div style="width:12px;height:12px;border-radius:3px;background:#1d1d1f;flex-shrink:0;"></div>Allow-Copy`;
 
-const ANIM_CYCLE  = 4200;
-const ANIM_SAFETY = 5000;
+const ANIM_CYCLE  = 4500;
+const ANIM_SAFETY = 5500;
 
 let animLock    = false;
-let animTimer   = null;
+let animTimers  = [];
+let nextTimer   = null;
 let safetyTimer = null;
 
+function addTimer(fn, delay) {
+  const id = setTimeout(fn, delay);
+  animTimers.push(id);
+  return id;
+}
+
 function scheduleAnim(delay = ANIM_CYCLE) {
-  clearTimeout(animTimer);
-  animTimer = setTimeout(runAnim, delay);
+  clearTimeout(nextTimer);
+  nextTimer = setTimeout(runAnim, delay);
 }
 
 function resetAnim(reschedule = true) {
-  clearTimeout(animTimer);
+  animTimers.forEach(clearTimeout);
+  animTimers = [];
+  clearTimeout(nextTimer);
   clearTimeout(safetyTimer);
   animLock = false;
-  fakeCursor.style.transition  = 'none';
-  fakeCursor.style.opacity     = '0';
-  fakeCursor.style.transform   = 'scale(1)';
+
+  fakeCursor.style.transition = 'none';
+  fakeCursor.style.opacity    = '0';
+  fakeCursor.style.transform  = 'scale(1) translateZ(0)';
+
+  dragGhost.style.transition  = 'none';
+  dragGhost.style.opacity     = '0';
+
   bookmarkBar.style.transition = 'none';
   bookmarkBar.classList.remove('visible');
-  bmSlot.classList.remove('highlight');
+
+  bmSlot.classList.remove('success');
   bmSlot.innerHTML = SLOT_EMPTY_HTML;
+
+  pageEl.classList.remove('is-dimmed');
+
   const old = document.getElementById('__unlock_toast__');
   if (old) old.remove();
+
   if (reschedule && !document.hidden) scheduleAnim();
 }
 
@@ -106,12 +127,12 @@ function showDemoToast() {
   document.body.appendChild(t);
 
   requestAnimationFrame(() => {
-    t.style.opacity = '1';
+    t.style.opacity   = '1';
     t.style.transform = 'translateX(-50%) translateY(0)';
   });
 
   setTimeout(() => {
-    t.style.opacity = '0';
+    t.style.opacity   = '0';
     t.style.transform = 'translateX(-50%) translateY(-10px)';
     setTimeout(() => t.remove(), 250);
   }, 1400);
@@ -126,67 +147,105 @@ function runAnim() {
   safetyTimer = setTimeout(() => resetAnim(), ANIM_SAFETY);
 
   bookmarkBar.style.transition = 'none';
+  bookmarkBar.style.opacity    = '1';
   bookmarkBar.style.transform  = 'translateY(0)';
   void bookmarkBar.offsetHeight;
   const slotRect = bmSlot.getBoundingClientRect();
-  const targetX  = slotRect.left + slotRect.width  / 2 - 10;
-  const targetY  = slotRect.top  + slotRect.height / 2 - 10;
+  bookmarkBar.style.opacity    = '';
   bookmarkBar.style.transform  = '';
   bookmarkBar.style.transition = '';
 
   const btnRect = dragBtn.getBoundingClientRect();
-  const startX  = btnRect.left + btnRect.width  / 2 - 10;
-  const startY  = btnRect.top  + btnRect.height / 2 - 10;
+  const ghostW  = dragGhost.offsetWidth;
+  const ghostH  = dragGhost.offsetHeight;
+
+  const cursorAtBtn  = { x: btnRect.left  + btnRect.width  / 2 - 10, y: btnRect.top  + btnRect.height / 2 - 10 };
+  const cursorAtSlot = { x: slotRect.left + slotRect.width / 2 - 10, y: slotRect.top + slotRect.height / 2 - 10 };
+  const ghostAtBtn   = { x: btnRect.left  + btnRect.width  / 2 - ghostW / 2, y: btnRect.top  + btnRect.height / 2 - ghostH / 2 };
+  const ghostAtSlot  = { x: slotRect.left + slotRect.width / 2 - ghostW / 2, y: slotRect.top + slotRect.height / 2 - ghostH / 2 };
 
   fakeCursor.style.transition = 'none';
-  fakeCursor.style.transform  = 'scale(1)';
-  fakeCursor.style.left       = startX + 'px';
-  fakeCursor.style.top        = startY + 'px';
+  fakeCursor.style.left       = cursorAtBtn.x + 'px';
+  fakeCursor.style.top        = cursorAtBtn.y + 'px';
+  fakeCursor.style.transform  = 'scale(1) translateZ(0)';
   fakeCursor.style.opacity    = '0';
+  void fakeCursor.offsetHeight;
 
-  setTimeout(() => {
+  addTimer(() => {
     fakeCursor.style.transition = 'opacity 0.22s ease';
-    fakeCursor.style.opacity = '1';
-  }, 100);
+    fakeCursor.style.opacity    = '1';
+  }, 30);
 
-  setTimeout(() => {
-    fakeCursor.style.transition = 'left 0.85s cubic-bezier(0.4,0,0.2,1), top 0.85s cubic-bezier(0.4,0,0.2,1), opacity 0.22s ease';
-    fakeCursor.style.left = targetX + 'px';
-    fakeCursor.style.top  = targetY + 'px';
-  }, 500);
+  addTimer(() => {
+    fakeCursor.style.transition = 'transform 0.1s ease';
+    fakeCursor.style.transform  = 'scale(0.78) translateZ(0)';
+  }, 400);
 
-  setTimeout(() => {
+  addTimer(() => {
+    fakeCursor.style.transition = 'transform 0.15s cubic-bezier(0.34,1.56,0.64,1)';
+    fakeCursor.style.transform  = 'scale(1) translateZ(0)';
+  }, 510);
+
+  addTimer(() => {
+    dragGhost.style.transition = 'none';
+    dragGhost.style.left       = ghostAtBtn.x + 'px';
+    dragGhost.style.top        = ghostAtBtn.y + 'px';
+    dragGhost.style.transform  = 'scale(1.08) rotate(-3deg) translateZ(0)';
+    dragGhost.style.boxShadow  = '0 16px 40px rgba(0,0,0,0.28)';
+    dragGhost.style.opacity    = '0.7';
+    void dragGhost.offsetHeight;
+    pageEl.classList.add('is-dimmed');
+  }, 550);
+
+  addTimer(() => {
+    bookmarkBar.style.transition = '';
     bookmarkBar.classList.add('visible');
   }, 700);
 
-  setTimeout(() => {
-    bmSlot.classList.add('highlight');
+  addTimer(() => {
+    fakeCursor.style.transition = 'left 0.7s cubic-bezier(0.34,1.56,0.64,1), top 0.7s cubic-bezier(0.34,1.56,0.64,1)';
+    fakeCursor.style.left       = cursorAtSlot.x + 'px';
+    fakeCursor.style.top        = cursorAtSlot.y + 'px';
+
+    dragGhost.style.transition  = 'left 0.8s cubic-bezier(0.34,1.56,0.64,1) 0.06s, top 0.8s cubic-bezier(0.34,1.56,0.64,1) 0.06s';
+    dragGhost.style.left        = ghostAtSlot.x + 'px';
+    dragGhost.style.top         = ghostAtSlot.y + 'px';
+  }, 800);
+
+  addTimer(() => {
+    bmSlot.classList.add('success');
     bmSlot.innerHTML = SLOT_FILLED_HTML;
-  }, 1380);
 
-  setTimeout(() => {
-    fakeCursor.style.transition = 'transform 0.08s ease, opacity 0.22s ease';
-    fakeCursor.style.transform = 'scale(0.78)';
-    setTimeout(() => { fakeCursor.style.transform = 'scale(1)'; }, 120);
+    dragGhost.style.transition = 'transform 0.28s ease, opacity 0.2s ease';
+    dragGhost.style.transform  = 'scale(0.3) translateZ(0)';
+    dragGhost.style.opacity    = '0';
+
+    fakeCursor.style.transition = 'transform 0.08s ease';
+    fakeCursor.style.transform  = 'scale(0.78) translateZ(0)';
+    addTimer(() => {
+      fakeCursor.style.transition = 'transform 0.15s cubic-bezier(0.34,1.56,0.64,1)';
+      fakeCursor.style.transform  = 'scale(1) translateZ(0)';
+    }, 100);
+
+    pageEl.classList.remove('is-dimmed');
     showDemoToast();
-  }, 1560);
+  }, 1700);
 
-  setTimeout(() => {
-    fakeCursor.style.transition = 'opacity 0.22s ease, transform 0.08s ease';
-    fakeCursor.style.opacity = '0';
-  }, 2700);
+  addTimer(() => {
+    fakeCursor.style.transition = 'opacity 0.22s ease';
+    fakeCursor.style.opacity    = '0';
+  }, 2200);
 
-  setTimeout(() => {
-    bmSlot.classList.remove('highlight');
+  addTimer(() => {
+    bmSlot.classList.remove('success');
     bmSlot.innerHTML = SLOT_EMPTY_HTML;
-  }, 2900);
-
-  setTimeout(() => {
     bookmarkBar.classList.remove('visible');
+    dragGhost.style.transition = 'none';
+    dragGhost.style.opacity    = '0';
     clearTimeout(safetyTimer);
     animLock = false;
     scheduleAnim();
-  }, 3200);
+  }, 2600);
 }
 
 dragBtn.addEventListener('dragstart', () => resetAnim());
