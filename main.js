@@ -20,7 +20,7 @@ document.querySelectorAll('.faq-trigger').forEach(trigger => {
   trigger.addEventListener('click', () => {
     const item = document.getElementById(trigger.dataset.target);
     const isOpen = item.classList.contains('open');
-    document.querySelectorAll('.faq-item.open').forEach(el => el.classList.remove('open'));
+    document.querySelectorAll('.faq-item').forEach(el => el.classList.remove('open'));
     if (!isOpen) item.classList.add('open');
   });
 });
