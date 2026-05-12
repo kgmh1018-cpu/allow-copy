@@ -5,7 +5,6 @@ const BOOKMARKLET_CODE = `javascript:(function(){var _m='allow-copy v1.0 | 2026.
 // =============================================
 
 document.getElementById('bookmarklet-link').href = BOOKMARKLET_CODE;
-document.getElementById('bookmarklet-link-modal').href = BOOKMARKLET_CODE;
 
 // ── Modal ──
 const overlay    = document.getElementById('modalOverlay');
