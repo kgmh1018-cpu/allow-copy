@@ -92,7 +92,6 @@
       pointer-events: none;
       opacity: 0;
       z-index: 200;
-      will-change: transform, opacity;
     }
 
     /* ── Page ── */
@@ -549,9 +548,9 @@
     document.getElementById('bookmarklet-link-modal').href = BOOKMARKLET_CODE;
 
     // ── Modal ──
-    const overlay  = document.getElementById('modalOverlay');
+    const overlay    = document.getElementById('modalOverlay');
     const installBtn = document.getElementById('installBtn');
-    const closeBtn = document.getElementById('closeBtn');
+    const closeBtn   = document.getElementById('closeBtn');
 
     installBtn.addEventListener('click', () => overlay.classList.add('open'));
     closeBtn.addEventListener('click',   () => overlay.classList.remove('open'));
@@ -590,70 +589,131 @@
     const bmSlot      = document.getElementById('bmSlot');
     const dragBtn     = document.getElementById('bookmarklet-link');
 
+    const SLOT_EMPTY_HTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Allow-Copy`;
+    const SLOT_FILLED_HTML = `<div style="width:12px;height:12px;border-radius:3px;background:#1d1d1f;flex-shrink:0;"></div>Allow-Copy`;
+
     let animLock = false;
     let animTimer;
+
+    function showDemoToast() {
+      const old = document.getElementById('__unlock_toast__');
+      if (old) old.remove();
+
+      const svgCheck = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2.5 7L5.5 10L11.5 4" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+      const t = document.createElement('div');
+      t.id = '__unlock_toast__';
+      t.style.cssText = 'position:fixed;top:50px;left:50%;transform:translateX(-50%) translateY(-10px);z-index:2147483647;display:flex;align-items:center;gap:9px;background:rgba(28,28,30,0.88);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:0.5px solid rgba(255,255,255,0.12);border-radius:999px;padding:8px 16px 8px 8px;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",sans-serif;font-size:13px;font-weight:500;color:#fff;letter-spacing:-0.01em;opacity:0;transition:opacity 0.2s ease,transform 0.2s ease;pointer-events:none;white-space:nowrap;';
+
+      const ic = document.createElement('span');
+      ic.innerHTML = svgCheck;
+      ic.style.cssText = 'width:24px;height:24px;border-radius:50%;background:#32D74B;display:flex;align-items:center;justify-content:center;flex-shrink:0;';
+
+      const tx = document.createElement('span');
+      tx.textContent = '복사 방지 해제 완료';
+
+      t.appendChild(ic);
+      t.appendChild(tx);
+      document.body.appendChild(t);
+
+      requestAnimationFrame(() => {
+        t.style.opacity = '1';
+        t.style.transform = 'translateX(-50%) translateY(0)';
+      });
+
+      setTimeout(() => {
+        t.style.opacity = '0';
+        t.style.transform = 'translateX(-50%) translateY(-10px)';
+        setTimeout(() => t.remove(), 250);
+      }, 1400);
+    }
 
     function runAnim() {
       if (animLock || overlay.classList.contains('open')) return;
       animLock = true;
+
+      // Measure slot position while bar is invisible (opacity stays 0)
+      bookmarkBar.style.transition = 'none';
+      bookmarkBar.style.transform = 'translateY(0)';
+      void bookmarkBar.offsetHeight;
+      const slotRect = bmSlot.getBoundingClientRect();
+      const targetX  = slotRect.left + slotRect.width  / 2 - 10;
+      const targetY  = slotRect.top  + slotRect.height / 2 - 10;
+      bookmarkBar.style.transform = '';
+      bookmarkBar.style.transition = '';
 
       const btnRect = dragBtn.getBoundingClientRect();
       const startX  = btnRect.left + btnRect.width  / 2 - 10;
       const startY  = btnRect.top  + btnRect.height / 2 - 10;
 
       fakeCursor.style.transition = 'none';
-      fakeCursor.style.left    = startX + 'px';
-      fakeCursor.style.top     = startY + 'px';
-      fakeCursor.style.opacity = '0';
+      fakeCursor.style.transform  = 'scale(1)';
+      fakeCursor.style.left       = startX + 'px';
+      fakeCursor.style.top        = startY + 'px';
+      fakeCursor.style.opacity    = '0';
 
       // Phase 1 — cursor appears
       setTimeout(() => {
         fakeCursor.style.transition = 'opacity 0.22s ease';
         fakeCursor.style.opacity = '1';
-      }, 80);
+      }, 100);
 
-      // Phase 2 — cursor travels upward
+      // Phase 2 — cursor travels diagonally toward slot
       setTimeout(() => {
-        fakeCursor.style.transition = 'top 0.85s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.22s ease';
-        fakeCursor.style.top = '12px';
-      }, 480);
+        fakeCursor.style.transition = 'left 0.85s cubic-bezier(0.4,0,0.2,1), top 0.85s cubic-bezier(0.4,0,0.2,1), opacity 0.22s ease';
+        fakeCursor.style.left = targetX + 'px';
+        fakeCursor.style.top  = targetY + 'px';
+      }, 500);
 
-      // Phase 3 — bookmark bar slides in
+      // Phase 3 — bookmark bar slides in as cursor moves up
       setTimeout(() => {
         bookmarkBar.classList.add('visible');
-      }, 680);
+      }, 700);
 
-      // Phase 4 — slot highlights
+      // Phase 4 — cursor arrives, slot highlights
       setTimeout(() => {
         bmSlot.classList.add('highlight');
-        bmSlot.innerHTML = `<div style="width:12px;height:12px;border-radius:3px;background:#1d1d1f;flex-shrink:0;"></div>Allow-Copy`;
-      }, 1180);
+        bmSlot.innerHTML = SLOT_FILLED_HTML;
+      }, 1380);
 
-      // Phase 5 — cursor fades out
+      // Phase 5 — click effect + toast
       setTimeout(() => {
-        fakeCursor.style.transition = 'opacity 0.22s ease';
-        fakeCursor.style.opacity = '0';
-      }, 1480);
+        fakeCursor.style.transition = 'transform 0.08s ease, opacity 0.22s ease';
+        fakeCursor.style.transform = 'scale(0.78)';
+        setTimeout(() => { fakeCursor.style.transform = 'scale(1)'; }, 120);
+        showDemoToast();
+      }, 1560);
 
-      // Phase 6 — slot un-highlights
+      // Phase 6 — cursor fades out
+      setTimeout(() => {
+        fakeCursor.style.transition = 'opacity 0.22s ease, transform 0.08s ease';
+        fakeCursor.style.opacity = '0';
+      }, 2700);
+
+      // Phase 7 — slot resets
       setTimeout(() => {
         bmSlot.classList.remove('highlight');
-        bmSlot.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Allow-Copy`;
-      }, 1780);
+        bmSlot.innerHTML = SLOT_EMPTY_HTML;
+      }, 2900);
 
-      // Phase 7 — bookmark bar slides out, reset
+      // Phase 8 — bookmark bar slides out, unlock
       setTimeout(() => {
         bookmarkBar.classList.remove('visible');
         animLock = false;
-      }, 2100);
+      }, 3200);
     }
 
     function stopAnim() {
       clearTimeout(animTimer);
       animLock = false;
-      fakeCursor.style.opacity = '0';
+      fakeCursor.style.opacity   = '0';
+      fakeCursor.style.transform = 'scale(1)';
+      bookmarkBar.style.transition = 'none';
       bookmarkBar.classList.remove('visible');
       bmSlot.classList.remove('highlight');
+      bmSlot.innerHTML = SLOT_EMPTY_HTML;
+      const old = document.getElementById('__unlock_toast__');
+      if (old) old.remove();
     }
 
     dragBtn.addEventListener('dragstart', stopAnim);
