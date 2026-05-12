@@ -1,32 +1,670 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Allow-Copy v26.05.12</title>
-    <style>
-        body { font-family: -apple-system, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background-color: #f5f5f7; margin: 0; }
-        .card { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); text-align: center; max-width: 400px; }
-        h1 { font-size: 24px; margin-bottom: 10px; color: #1d1d1f; }
-        p { color: #86868b; font-size: 14px; line-height: 1.5; margin-bottom: 30px; }
-        .bookmarklet { display: inline-block; padding: 12px 24px; background-color: #32D74B; color: white; text-decoration: none; border-radius: 999px; font-weight: 600; cursor: grab; transition: transform 0.2s; border: none; }
-        .bookmarklet:hover { transform: scale(1.05); }
-        .tip { margin-top: 20px; font-size: 12px; color: #aeaeb2; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Allow-Copy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #f5f5f7;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    /* ── Bookmark bar preview ── */
+    .bookmark-bar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 36px;
+      background: rgba(248, 248, 248, 0.97);
+      border-bottom: 0.5px solid rgba(0,0,0,0.1);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      gap: 2px;
+      opacity: 0;
+      transform: translateY(-100%);
+      transition: opacity 0.28s ease, transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 100;
+      pointer-events: none;
+    }
+    .bookmark-bar.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .bm-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 9px;
+      border-radius: 5px;
+    }
+    .bm-favicon {
+      width: 14px; height: 14px;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+    .bm-label {
+      font-size: 12px;
+      font-weight: 400;
+      color: #3c3c3c;
+      white-space: nowrap;
+    }
+    .bm-slot {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 9px;
+      border-radius: 5px;
+      border: 1.5px dashed rgba(0,0,0,0.15);
+      font-size: 12px;
+      color: #aaa;
+      white-space: nowrap;
+      transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+    }
+    .bm-slot.highlight {
+      border-color: #0066cc;
+      background: rgba(0, 102, 204, 0.07);
+      color: #0066cc;
+      transform: scale(1.04);
+    }
+    .bm-sep {
+      width: 0.5px;
+      height: 16px;
+      background: rgba(0,0,0,0.12);
+      margin: 0 4px;
+    }
+
+    /* ── Fake cursor ── */
+    .fake-cursor {
+      position: fixed;
+      width: 20px; height: 20px;
+      pointer-events: none;
+      opacity: 0;
+      z-index: 200;
+      will-change: transform, opacity;
+    }
+
+    /* ── Page ── */
+    .page {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    /* ── Card ── */
+    .card {
+      background: #ffffff;
+      border-radius: 22px;
+      box-shadow:
+        0 1px 2px rgba(0,0,0,0.06),
+        0 2px 4px rgba(0,0,0,0.04),
+        0 12px 32px rgba(0,0,0,0.07);
+      padding: 44px 40px 36px;
+      text-align: center;
+      width: 100%;
+      max-width: 380px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .eyebrow {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: #b0afad;
+      margin-bottom: 10px;
+    }
+    .card-title {
+      font-size: 30px;
+      font-weight: 600;
+      letter-spacing: -0.03em;
+      color: #1d1d1f;
+      margin-bottom: 10px;
+    }
+    .card-desc {
+      font-size: 13px;
+      color: #8e8e93;
+      line-height: 1.65;
+      margin-bottom: 28px;
+    }
+
+    /* ── Drag button ── */
+    .btn-wrap {
+      width: 100%;
+      margin-bottom: 14px;
+    }
+    .drag-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      width: 100%;
+      padding: 13px 28px;
+      background: #1d1d1f;
+      color: #f5f5f7;
+      border-radius: 14px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+      text-decoration: none;
+      cursor: grab;
+      user-select: none;
+      -webkit-user-drag: element;
+      animation: floatBtn 3s ease-in-out infinite;
+      will-change: transform, box-shadow;
+    }
+    .drag-btn:active { cursor: grabbing; animation-play-state: paused; }
+
+    @keyframes floatBtn {
+      0%, 100% {
+        transform: translateY(0px);
+        box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+      }
+      50% {
+        transform: translateY(-3px);
+        box-shadow: 0 9px 24px rgba(0,0,0,0.11);
+      }
+    }
+
+    .grip-icon {
+      display: flex;
+      align-items: center;
+      opacity: 0.55;
+      flex-shrink: 0;
+    }
+
+    /* ── Install link ── */
+    .install-link {
+      font-size: 12px;
+      color: #aeaeb2;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+      font-weight: 400;
+      padding: 4px 8px;
+      margin-bottom: 20px;
+      transition: color 0.15s;
+    }
+    .install-link:hover { color: #888; }
+
+    .version {
+      font-size: 11px;
+      color: #d0d0d0;
+    }
+
+    /* ── Modal overlay ── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0);
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 0 16px 24px;
+      z-index: 300;
+      pointer-events: none;
+      transition: background 0.3s ease;
+    }
+    .modal-overlay.open {
+      background: rgba(0,0,0,0.28);
+      pointer-events: all;
+    }
+
+    .modal {
+      background: #ffffff;
+      border-radius: 22px;
+      box-shadow: 0 8px 48px rgba(0,0,0,0.16);
+      width: 100%;
+      max-width: 380px;
+      overflow: hidden;
+      transform: translateY(110%);
+      transition: transform 0.38s cubic-bezier(0.34, 1.3, 0.64, 1);
+    }
+    .modal-overlay.open .modal {
+      transform: translateY(0);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 0.5px solid #f2f2f2;
+    }
+    .modal-title {
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: #1d1d1f;
+    }
+    .close-btn {
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      background: #f2f2f2;
+      border: none;
+      cursor: pointer;
+      font-size: 11px;
+      color: #888;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: inherit;
+      transition: background 0.15s;
+      line-height: 1;
+    }
+    .close-btn:hover { background: #e5e5e5; }
+
+    .modal-body {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .step-row {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+    .step-num {
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      background: #f2f2f2;
+      color: #888;
+      font-size: 10px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .step-text {
+      font-size: 13px;
+      color: #3c3c3c;
+      line-height: 1.55;
+    }
+    .step-text kbd {
+      display: inline-block;
+      padding: 1px 5px;
+      background: #f4f4f4;
+      border-radius: 4px;
+      font-size: 11px;
+      font-family: inherit;
+      color: #555;
+      border: 0.5px solid #ddd;
+      border-bottom-width: 1.5px;
+    }
+
+    .modal-drag-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 12px;
+      background: #1d1d1f;
+      color: #f5f5f7;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+      text-decoration: none;
+      cursor: grab;
+      user-select: none;
+      -webkit-user-drag: element;
+    }
+    .modal-drag-btn:active { cursor: grabbing; }
+
+    /* ── Accordion ── */
+    .accordion {
+      border: 0.5px solid #ebebeb;
+      border-radius: 14px;
+      overflow: hidden;
+    }
+    .acc-trigger {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      cursor: pointer;
+      background: none;
+      border: none;
+      width: 100%;
+      font-family: inherit;
+    }
+    .acc-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .acc-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #d0d0d0;
+    }
+    .acc-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: #8e8e93;
+    }
+    .acc-chevron {
+      transition: transform 0.25s ease;
+      color: #c8c8c8;
+      display: flex;
+    }
+    .accordion.open .acc-chevron { transform: rotate(180deg); }
+
+    .acc-body {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+    .accordion.open .acc-body { max-height: 200px; }
+
+    .acc-inner {
+      padding: 14px 16px;
+      border-top: 0.5px solid #f2f2f2;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .acc-desc {
+      font-size: 12px;
+      color: #a0a0a0;
+      line-height: 1.55;
+    }
+    .copy-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      width: 100%;
+      padding: 11px;
+      border: 0.5px solid #e8e8e8;
+      border-radius: 10px;
+      background: #fafafa;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      color: #3c3c3c;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.2s, color 0.2s;
+    }
+    .copy-btn:hover { background: #f2f2f2; }
+    .copy-btn.copied {
+      color: #28a745;
+      border-color: rgba(40,167,69,0.35);
+      background: rgba(40,167,69,0.04);
+    }
+  </style>
 </head>
 <body>
+
+  <!-- Bookmark bar preview (animation only) -->
+  <div class="bookmark-bar" id="bookmarkBar">
+    <div class="bm-item">
+      <div class="bm-favicon" style="background:#4285f4;"></div>
+      <span class="bm-label">Gmail</span>
+    </div>
+    <div class="bm-item">
+      <div class="bm-favicon" style="background:#24292e; border-radius:50%;"></div>
+      <span class="bm-label">GitHub</span>
+    </div>
+    <div class="bm-sep"></div>
+    <div class="bm-slot" id="bmSlot">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+      Allow-Copy
+    </div>
+    <div class="bm-sep"></div>
+    <div class="bm-item">
+      <div class="bm-favicon" style="background:#ff4e00; border-radius:50%;"></div>
+      <span class="bm-label">Notion</span>
+    </div>
+    <div class="bm-item">
+      <div class="bm-favicon" style="background:#1877f2; border-radius:2px;"></div>
+      <span class="bm-label">YouTube</span>
+    </div>
+  </div>
+
+  <!-- Fake cursor (body-level, position: fixed) -->
+  <div class="fake-cursor" id="fakeCursor">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M3.5 2L17 10.5L10 11.8L7 18.5L3.5 2Z" fill="#1d1d1f" stroke="white" stroke-width="1.5" stroke-linejoin="round"/>
+    </svg>
+  </div>
+
+  <!-- Page -->
+  <div class="page">
     <div class="card">
-        <h1>Allow-Copy v1.0</h1>
-        <p>복사가 안 되는 사이트에서 클릭 한 번으로<br>복사 방지를 해제하세요.</p>
-        
-        <!-- 이 버튼이 핵심입니다 -->
-        <a class="bookmarklet" href="javascript:(function(){var f=0;function unlock(d){if(!d||!d.body)return;try{['contextmenu','selectstart','copy','dragstart'].forEach(function(ev){d.addEventListener(ev,function(e){e.stopPropagation();},true);});try{var st=d.createElement('style');st.textContent='*{user-select:auto!important;-webkit-user-select:auto!important;}';d.head.appendChild(st);}catch(err){}var all=d.querySelectorAll('*');var batch=function(i){var end=Math.min(i+200,all.length);for(;i<end;i++){var tag=all[i].tagName;if(tag!=='SCRIPT'&&tag!=='STYLE'&&tag!=='SVG'&&tag!=='CANVAS'){all[i].style.userSelect='auto';all[i].style.webkitUserSelect='auto';}}if(end<all.length)(window.requestIdleCallback||setTimeout)(function(){batch(end);});};batch(0);}catch(e){f++;}}try{unlock(document);}catch(e){f++;}document.querySelectorAll('iframe').forEach(function(fr){try{unlock(fr.contentDocument);}catch(e){f++;}});try{var old=document.getElementById('__unlock_toast__');if(old)old.remove();var z=parseFloat(getComputedStyle(document.documentElement).zoom)||1;var sc=1/z;var isWarn=f>0;var color=isWarn?%27#FF9F0A':'#32D74B';var msg=isWarn?'일부 iframe 제한 ('+f+'개)':'복사 방지 해제 완료';var svgCheck='<svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2.5 7L5.5 10L11.5 4" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';var svgWarn='<svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7 2L12.5 12H1.5L7 2Z" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 6V8.5" stroke="white" stroke-width="1.6" stroke-linecap="round"/><circle cx="7" cy="10.5" r="0.75" fill="white"/></svg>';var t=document.createElement('div');t.id='__unlock_toast__';t.style.cssText='position:fixed;top:24px;left:50%;transform:translateX(-50%) translateY(-10px) scale('+sc+');transform-origin:top center;z-index:2147483647;display:flex;align-items:center;gap:9px;background:rgba(28,28,30,0.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:0.5px solid rgba(255,255,255,0.12);border-radius:999px;padding:8px 16px 8px 8px;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",sans-serif;font-size:13px;font-weight:500;color:#fff;letter-spacing:-0.01em;opacity:0;transition:opacity 0.2s ease,transform 0.2s ease;pointer-events:none;white-space:nowrap;';var ic=document.createElement('span');ic.innerHTML=isWarn?svgWarn:svgCheck;ic.style.cssText='width:24px;height:24px;border-radius:50%;background:'+color+';display:flex;align-items:center;justify-content:center;flex-shrink:0;';var tx=document.createElement('span');tx.textContent=msg;t.appendChild(ic);t.appendChild(tx);document.body.appendChild(t);requestAnimationFrame(function(){t.style.opacity='1';t.style.transform='translateX(-50%) translateY(0) scale('+sc+')';});setTimeout(function(){t.style.opacity='0';t.style.transform='translateX(-50%) translateY(-10px) scale('+sc+')';setTimeout(function(){t.remove();},250);},800);}catch(err){alert(f>0?'일부 프레임 제한 ('+f+'개)\n나머지 복사 해제 완료':'복사 방지 해제 완료');}})();">
-            [Allow-Copy] 버튼을 북마크 바에 끌어다 놓으세요
+      <span class="eyebrow">Bookmarklet</span>
+      <h1 class="card-title">Allow-Copy</h1>
+      <p class="card-desc">복사 차단이 걸린 페이지에서<br>텍스트를 자유롭게 선택하세요.</p>
+
+      <div class="btn-wrap">
+        <a id="bookmarklet-link" href="#" class="drag-btn" draggable="true">
+          <span class="grip-icon">
+            <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
+              <circle cx="5.5" cy="4.5" r="1.25"/>
+              <circle cx="10.5" cy="4.5" r="1.25"/>
+              <circle cx="5.5" cy="8" r="1.25"/>
+              <circle cx="10.5" cy="8" r="1.25"/>
+              <circle cx="5.5" cy="11.5" r="1.25"/>
+              <circle cx="10.5" cy="11.5" r="1.25"/>
+            </svg>
+          </span>
+          북마크바에 드래그
+        </a>
+      </div>
+
+      <button class="install-link" id="installBtn">설치 안내</button>
+      <span class="version">v1.0 · 2025.05.12</span>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal" id="modal">
+      <div class="modal-header">
+        <span class="modal-title">설치 안내</span>
+        <button class="close-btn" id="closeBtn">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="step-row">
+          <div class="step-num">1</div>
+          <p class="step-text">북마크바가 안 보이면 <kbd>Ctrl+Shift+B</kbd>로 켜세요.</p>
+        </div>
+        <div class="step-row">
+          <div class="step-num">2</div>
+          <p class="step-text">아래 버튼을 북마크바로 드래그하세요.</p>
+        </div>
+
+        <a id="bookmarklet-link-modal" href="#" class="modal-drag-btn" draggable="true">
+          <span class="grip-icon" style="opacity:.5;">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+              <circle cx="5.5" cy="4.5" r="1.25"/><circle cx="10.5" cy="4.5" r="1.25"/>
+              <circle cx="5.5" cy="8" r="1.25"/><circle cx="10.5" cy="8" r="1.25"/>
+              <circle cx="5.5" cy="11.5" r="1.25"/><circle cx="10.5" cy="11.5" r="1.25"/>
+            </svg>
+          </span>
+          북마크바에 드래그
         </a>
 
-        <div class="tip">
-            사용법: 북마크 바가 안 보이면 <b>Ctrl+Shift+B</b>를 누르세요.
+        <div class="accordion" id="accordion">
+          <button class="acc-trigger" id="accTrigger">
+            <div class="acc-left">
+              <div class="acc-dot"></div>
+              <span class="acc-label">직접 추가하기</span>
+            </div>
+            <span class="acc-chevron">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </span>
+          </button>
+          <div class="acc-body" id="accBody">
+            <div class="acc-inner">
+              <p class="acc-desc">새 북마크를 만들고 URL 칸에 아래 코드를 붙여넣으세요.</p>
+              <button class="copy-btn" id="copyBtn">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                  <rect x="9" y="9" width="13" height="13" rx="2"/>
+                  <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+                </svg>
+                코드 복사
+              </button>
+            </div>
+          </div>
         </div>
+      </div>
     </div>
+  </div>
+
+  <script>
+    // =============================================
+    // BOOKMARKLET CODE — 여기만 수정
+    // =============================================
+    const BOOKMARKLET_CODE = `javascript:(function(){var _m='allow-copy v1.0 | 2025.05.12';var f=0;function unlock(d){if(!d||!d.body)return;try{['contextmenu','selectstart','copy','dragstart'].forEach(function(ev){d.addEventListener(ev,function(e){e.stopPropagation();},true);});try{var st=d.createElement('style');st.textContent='*{user-select:auto!important;-webkit-user-select:auto!important;}';d.head.appendChild(st);}catch(err){}var all=d.querySelectorAll('*');var batch=function(i){var end=Math.min(i+200,all.length);for(;i<end;i++){var tag=all[i].tagName;if(tag!=='SCRIPT'&&tag!=='STYLE'&&tag!=='SVG'&&tag!=='CANVAS'){all[i].style.userSelect='auto';all[i].style.webkitUserSelect='auto';}}if(end<all.length)(window.requestIdleCallback||setTimeout)(function(){batch(end);});};batch(0);}catch(e){f++;}}try{unlock(document);}catch(e){f++;}document.querySelectorAll('iframe').forEach(function(fr){try{unlock(fr.contentDocument);}catch(e){f++;}});try{var old=document.getElementById('__unlock_toast__');if(old)old.remove();var z=parseFloat(getComputedStyle(document.documentElement).zoom)||1;var sc=1/z;var isWarn=f>0;var color=isWarn?%27#FF9F0A':'#32D74B';var msg=isWarn?'일부 iframe 제한 ('+f+'개)':'복사 방지 해제 완료';var svgCheck='<svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2.5 7L5.5 10L11.5 4" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';var svgWarn='<svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7 2L12.5 12H1.5L7 2Z" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 6V8.5" stroke="white" stroke-width="1.6" stroke-linecap="round"/><circle cx="7" cy="10.5" r="0.75" fill="white"/></svg>';var t=document.createElement('div');t.id='__unlock_toast__';t.style.cssText='position:fixed;top:24px;left:50%;transform:translateX(-50%) translateY(-10px) scale('+sc+');transform-origin:top center;z-index:2147483647;display:flex;align-items:center;gap:9px;background:rgba(28,28,30,0.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:0.5px solid rgba(255,255,255,0.12);border-radius:999px;padding:8px 16px 8px 8px;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",sans-serif;font-size:13px;font-weight:500;color:#fff;letter-spacing:-0.01em;opacity:0;transition:opacity 0.2s ease,transform 0.2s ease;pointer-events:none;white-space:nowrap;';var ic=document.createElement('span');ic.innerHTML=isWarn?svgWarn:svgCheck;ic.style.cssText='width:24px;height:24px;border-radius:50%;background:'+color+';display:flex;align-items:center;justify-content:center;flex-shrink:0;';var tx=document.createElement('span');tx.textContent=msg;t.appendChild(ic);t.appendChild(tx);document.body.appendChild(t);requestAnimationFrame(function(){t.style.opacity='1';t.style.transform='translateX(-50%) translateY(0) scale('+sc+')';});setTimeout(function(){t.style.opacity='0';t.style.transform='translateX(-50%) translateY(-10px) scale('+sc+')';setTimeout(function(){t.remove();},250);},800);}catch(err){alert(f>0?'일부 프레임 제한 ('+f+'개)\n나머지 복사 해제 완료':'복사 방지 해제 완료');}})();`;
+    // =============================================
+
+    document.getElementById('bookmarklet-link').href = BOOKMARKLET_CODE;
+    document.getElementById('bookmarklet-link-modal').href = BOOKMARKLET_CODE;
+
+    // ── Modal ──
+    const overlay  = document.getElementById('modalOverlay');
+    const installBtn = document.getElementById('installBtn');
+    const closeBtn = document.getElementById('closeBtn');
+
+    installBtn.addEventListener('click', () => overlay.classList.add('open'));
+    closeBtn.addEventListener('click',   () => overlay.classList.remove('open'));
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
+
+    // ── Accordion ──
+    document.getElementById('accTrigger').addEventListener('click', () => {
+      document.getElementById('accordion').classList.toggle('open');
+    });
+
+    // ── Copy button ──
+    document.getElementById('copyBtn').addEventListener('click', () => {
+      navigator.clipboard.writeText(BOOKMARKLET_CODE).then(() => {
+        const btn = document.getElementById('copyBtn');
+        btn.classList.add('copied');
+        btn.innerHTML = `
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+            <polyline points="20 6 9 16 4 11"/>
+          </svg>
+          복사됨`;
+        setTimeout(() => {
+          btn.classList.remove('copied');
+          btn.innerHTML = `
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <rect x="9" y="9" width="13" height="13" rx="2"/>
+              <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+            </svg>
+            코드 복사`;
+        }, 2000);
+      });
+    });
+
+    // ── A+B drag animation ──
+    const fakeCursor  = document.getElementById('fakeCursor');
+    const bookmarkBar = document.getElementById('bookmarkBar');
+    const bmSlot      = document.getElementById('bmSlot');
+    const dragBtn     = document.getElementById('bookmarklet-link');
+
+    let animLock = false;
+    let animTimer;
+
+    function runAnim() {
+      if (animLock || overlay.classList.contains('open')) return;
+      animLock = true;
+
+      const btnRect = dragBtn.getBoundingClientRect();
+      const startX  = btnRect.left + btnRect.width  / 2 - 10;
+      const startY  = btnRect.top  + btnRect.height / 2 - 10;
+
+      fakeCursor.style.transition = 'none';
+      fakeCursor.style.left    = startX + 'px';
+      fakeCursor.style.top     = startY + 'px';
+      fakeCursor.style.opacity = '0';
+
+      // Phase 1 — cursor appears
+      setTimeout(() => {
+        fakeCursor.style.transition = 'opacity 0.22s ease';
+        fakeCursor.style.opacity = '1';
+      }, 80);
+
+      // Phase 2 — cursor travels upward
+      setTimeout(() => {
+        fakeCursor.style.transition = 'top 0.85s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.22s ease';
+        fakeCursor.style.top = '12px';
+      }, 480);
+
+      // Phase 3 — bookmark bar slides in
+      setTimeout(() => {
+        bookmarkBar.classList.add('visible');
+      }, 680);
+
+      // Phase 4 — slot highlights
+      setTimeout(() => {
+        bmSlot.classList.add('highlight');
+      }, 1180);
+
+      // Phase 5 — cursor fades out
+      setTimeout(() => {
+        fakeCursor.style.transition = 'opacity 0.22s ease';
+        fakeCursor.style.opacity = '0';
+      }, 1480);
+
+      // Phase 6 — slot un-highlights
+      setTimeout(() => {
+        bmSlot.classList.remove('highlight');
+      }, 1780);
+
+      // Phase 7 — bookmark bar slides out, reset
+      setTimeout(() => {
+        bookmarkBar.classList.remove('visible');
+        animLock = false;
+      }, 2100);
+    }
+
+    function stopAnim() {
+      clearTimeout(animTimer);
+      animLock = false;
+      fakeCursor.style.opacity = '0';
+      bookmarkBar.classList.remove('visible');
+      bmSlot.classList.remove('highlight');
+    }
+
+    dragBtn.addEventListener('dragstart', stopAnim);
+    document.getElementById('bookmarklet-link-modal').addEventListener('dragstart', stopAnim);
+
+    function scheduleAnim() {
+      animTimer = setTimeout(() => {
+        runAnim();
+        scheduleAnim();
+      }, 4200);
+    }
+
+    setTimeout(scheduleAnim, 2800);
+  </script>
 </body>
 </html>
