@@ -63,7 +63,7 @@
         </a>
       </div>
 
-      <button class="install-link" id="installBtn">설치 안내</button>
+      <button class="install-link" id="installBtn">사용 방법</button>
       <span class="version">v1.0 · 2026.05.12</span>
     </div>
   </div>
@@ -71,54 +71,93 @@
   <div class="modal-overlay" id="modalOverlay">
     <div class="modal" id="modal">
       <div class="modal-header">
-        <span class="modal-title">설치 안내</span>
-        <button class="close-btn" id="closeBtn">✕</button>
+        <div class="modal-header-text">
+          <span class="modal-title">사용 방법</span>
+          <p class="modal-sub">사이트가 막아둔 복사 기능을 북마크 클릭 한 번으로 되돌려요.</p>
+        </div>
+        <button class="close-btn" id="closeBtn">
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+            <line x1="1" y1="1" x2="9" y2="9"/><line x1="9" y1="1" x2="1" y2="9"/>
+          </svg>
+        </button>
       </div>
       <div class="modal-body">
-        <div class="step-row">
-          <div class="step-num">1</div>
-          <p class="step-text">북마크바가 안 보이면 <kbd>Ctrl+Shift+B</kbd>로 켜세요.</p>
-        </div>
-        <div class="step-row">
-          <div class="step-num">2</div>
-          <p class="step-text">아래 버튼을 북마크바로 드래그하세요.</p>
-        </div>
+        <div class="faq-list">
 
-        <a id="bookmarklet-link-modal" href="#" class="modal-drag-btn" draggable="true" title="Allow-Copy" data-drag-label="북마크바에 드래그">
-          <span class="grip-icon" style="opacity:.5;">
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
-              <circle cx="5.5" cy="4.5" r="1.25"/><circle cx="10.5" cy="4.5" r="1.25"/>
-              <circle cx="5.5" cy="8" r="1.25"/><circle cx="10.5" cy="8" r="1.25"/>
-              <circle cx="5.5" cy="11.5" r="1.25"/><circle cx="10.5" cy="11.5" r="1.25"/>
-            </svg>
-          </span>
-          <span class="bm-name">Allow-Copy</span>
-        </a>
-
-        <div class="accordion" id="accordion">
-          <button class="acc-trigger" id="accTrigger">
-            <div class="acc-left">
-              <div class="acc-dot"></div>
-              <span class="acc-label">직접 추가하기</span>
-            </div>
-            <span class="acc-chevron">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                <polyline points="6 9 12 15 18 9"/>
-              </svg>
-            </span>
-          </button>
-          <div class="acc-body" id="accBody">
-            <div class="acc-inner">
-              <p class="acc-desc">새 북마크를 만들고 URL 칸에 아래 코드를 붙여넣으세요.</p>
-              <button class="copy-btn" id="copyBtn">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                  <rect x="9" y="9" width="13" height="13" rx="2"/>
-                  <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
-                </svg>
-                코드 복사
-              </button>
+          <div class="faq-item" id="faq1">
+            <button class="faq-trigger" data-target="faq1">
+              <span class="faq-label">Safari 사용자예요</span>
+              <span class="faq-chevron">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </span>
+            </button>
+            <div class="faq-body">
+              <div class="faq-inner">
+                <p class="faq-desc">Safari는 보안 정책상 별도 설정이 필요해요. 최초 1회만 하면 돼요.</p>
+                <ol class="faq-steps">
+                  <li>Safari 메뉴 → 설정 → <strong>고급</strong> 탭 → <em>개발자용 메뉴 보기</em> 체크</li>
+                  <li>상단 메뉴바에 생긴 <strong>개발자용</strong> 클릭</li>
+                  <li><em>스마트 검색 필드에서 JavaScript 허용</em> 체크</li>
+                </ol>
+                <p class="faq-note">이후엔 다른 브라우저와 동일하게 사용할 수 있어요.</p>
+              </div>
             </div>
           </div>
+
+          <div class="faq-item" id="faq2">
+            <button class="faq-trigger" data-target="faq2">
+              <span class="faq-label">북마크바가 안 보여요</span>
+              <span class="faq-chevron">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </span>
+            </button>
+            <div class="faq-body">
+              <div class="faq-inner">
+                <p class="faq-desc">브라우저별 단축키로 북마크바를 켜세요.</p>
+                <ul class="faq-keys">
+                  <li><span class="faq-browser">Chrome · Edge</span><kbd>Ctrl+Shift+B</kbd></li>
+                  <li><span class="faq-browser">Safari</span><span class="faq-path">보기 → 즐겨찾기 막대 보기</span></li>
+                  <li><span class="faq-browser">Firefox</span><kbd>Ctrl+Shift+B</kbd></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="faq-item" id="faq3">
+            <button class="faq-trigger" data-target="faq3">
+              <span class="faq-label">드래그가 안 돼요</span>
+              <span class="faq-chevron">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </span>
+            </button>
+            <div class="faq-body">
+              <div class="faq-inner">
+                <p class="faq-desc">새 북마크를 만들고 URL 칸에 아래 코드를 붙여넣으세요.</p>
+                <button class="copy-btn" id="copyBtn">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2"/>
+                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+                  </svg>
+                  코드 복사
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="faq-item" id="faq4">
+            <button class="faq-trigger" data-target="faq4">
+              <span class="faq-label">실행 후 페이지가 이상해요</span>
+              <span class="faq-chevron">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </span>
+            </button>
+            <div class="faq-body">
+              <div class="faq-inner">
+                <p class="faq-desc">복사 차단을 해제하는 과정에서 페이지 일부 기능이 영향을 받을 수 있어요. <kbd>F5</kbd>로 새로고침하면 원래대로 돌아와요.</p>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>

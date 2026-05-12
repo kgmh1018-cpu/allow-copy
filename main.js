@@ -16,9 +16,14 @@ installBtn.addEventListener('click', () => overlay.classList.add('open'));
 closeBtn.addEventListener('click',   () => overlay.classList.remove('open'));
 overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
 
-// ── Accordion ──
-document.getElementById('accTrigger').addEventListener('click', () => {
-  document.getElementById('accordion').classList.toggle('open');
+// ── FAQ ──
+document.querySelectorAll('.faq-trigger').forEach(trigger => {
+  trigger.addEventListener('click', () => {
+    const item = document.getElementById(trigger.dataset.target);
+    const isOpen = item.classList.contains('open');
+    document.querySelectorAll('.faq-item.open').forEach(el => el.classList.remove('open'));
+    if (!isOpen) item.classList.add('open');
+  });
 });
 
 // ── Copy button ──
@@ -186,7 +191,6 @@ function runAnim() {
 }
 
 dragBtn.addEventListener('dragstart', () => resetAnim());
-document.getElementById('bookmarklet-link-modal').addEventListener('dragstart', () => resetAnim());
 
 installBtn.addEventListener('click', () => resetAnim(false));
 closeBtn.addEventListener('click',   () => scheduleAnim(800));
