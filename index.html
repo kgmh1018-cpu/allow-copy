@@ -608,8 +608,33 @@
     const SLOT_EMPTY_HTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Allow-Copy`;
     const SLOT_FILLED_HTML = `<div style="width:12px;height:12px;border-radius:3px;background:#1d1d1f;flex-shrink:0;"></div>Allow-Copy`;
 
-    let animLock = false;
-    let animTimer;
+    const ANIM_CYCLE   = 4200;
+    const ANIM_SAFETY  = 5000;
+
+    let animLock    = false;
+    let animTimer   = null;
+    let safetyTimer = null;
+
+    function scheduleAnim(delay = ANIM_CYCLE) {
+      clearTimeout(animTimer);
+      animTimer = setTimeout(runAnim, delay);
+    }
+
+    function resetAnim(reschedule = true) {
+      clearTimeout(animTimer);
+      clearTimeout(safetyTimer);
+      animLock = false;
+      fakeCursor.style.transition  = 'none';
+      fakeCursor.style.opacity     = '0';
+      fakeCursor.style.transform   = 'scale(1)';
+      bookmarkBar.style.transition = 'none';
+      bookmarkBar.classList.remove('visible');
+      bmSlot.classList.remove('highlight');
+      bmSlot.innerHTML = SLOT_EMPTY_HTML;
+      const old = document.getElementById('__unlock_toast__');
+      if (old) old.remove();
+      if (reschedule && !document.hidden) scheduleAnim();
+    }
 
     function showDemoToast() {
       const old = document.getElementById('__unlock_toast__');
@@ -645,17 +670,20 @@
     }
 
     function runAnim() {
-      if (animLock || overlay.classList.contains('open')) return;
+      if (animLock || overlay.classList.contains('open') || document.hidden) {
+        scheduleAnim();
+        return;
+      }
       animLock = true;
+      safetyTimer = setTimeout(() => resetAnim(), ANIM_SAFETY);
 
-      // Measure slot position while bar is invisible (opacity stays 0)
       bookmarkBar.style.transition = 'none';
-      bookmarkBar.style.transform = 'translateY(0)';
+      bookmarkBar.style.transform  = 'translateY(0)';
       void bookmarkBar.offsetHeight;
       const slotRect = bmSlot.getBoundingClientRect();
       const targetX  = slotRect.left + slotRect.width  / 2 - 10;
       const targetY  = slotRect.top  + slotRect.height / 2 - 10;
-      bookmarkBar.style.transform = '';
+      bookmarkBar.style.transform  = '';
       bookmarkBar.style.transition = '';
 
       const btnRect = dragBtn.getBoundingClientRect();
@@ -668,31 +696,26 @@
       fakeCursor.style.top        = startY + 'px';
       fakeCursor.style.opacity    = '0';
 
-      // Phase 1 — cursor appears
       setTimeout(() => {
         fakeCursor.style.transition = 'opacity 0.22s ease';
         fakeCursor.style.opacity = '1';
       }, 100);
 
-      // Phase 2 — cursor travels diagonally toward slot
       setTimeout(() => {
         fakeCursor.style.transition = 'left 0.85s cubic-bezier(0.4,0,0.2,1), top 0.85s cubic-bezier(0.4,0,0.2,1), opacity 0.22s ease';
         fakeCursor.style.left = targetX + 'px';
         fakeCursor.style.top  = targetY + 'px';
       }, 500);
 
-      // Phase 3 — bookmark bar slides in as cursor moves up
       setTimeout(() => {
         bookmarkBar.classList.add('visible');
       }, 700);
 
-      // Phase 4 — cursor arrives, slot highlights
       setTimeout(() => {
         bmSlot.classList.add('highlight');
         bmSlot.innerHTML = SLOT_FILLED_HTML;
       }, 1380);
 
-      // Phase 5 — click effect + toast
       setTimeout(() => {
         fakeCursor.style.transition = 'transform 0.08s ease, opacity 0.22s ease';
         fakeCursor.style.transform = 'scale(0.78)';
@@ -700,49 +723,37 @@
         showDemoToast();
       }, 1560);
 
-      // Phase 6 — cursor fades out
       setTimeout(() => {
         fakeCursor.style.transition = 'opacity 0.22s ease, transform 0.08s ease';
         fakeCursor.style.opacity = '0';
       }, 2700);
 
-      // Phase 7 — slot resets
       setTimeout(() => {
         bmSlot.classList.remove('highlight');
         bmSlot.innerHTML = SLOT_EMPTY_HTML;
       }, 2900);
 
-      // Phase 8 — bookmark bar slides out, unlock
       setTimeout(() => {
         bookmarkBar.classList.remove('visible');
+        clearTimeout(safetyTimer);
         animLock = false;
+        scheduleAnim();
       }, 3200);
     }
 
-    function stopAnim() {
-      clearTimeout(animTimer);
-      animLock = false;
-      fakeCursor.style.opacity   = '0';
-      fakeCursor.style.transform = 'scale(1)';
-      bookmarkBar.style.transition = 'none';
-      bookmarkBar.classList.remove('visible');
-      bmSlot.classList.remove('highlight');
-      bmSlot.innerHTML = SLOT_EMPTY_HTML;
-      const old = document.getElementById('__unlock_toast__');
-      if (old) old.remove();
-    }
+    dragBtn.addEventListener('dragstart', () => resetAnim());
+    document.getElementById('bookmarklet-link-modal').addEventListener('dragstart', () => resetAnim());
 
-    dragBtn.addEventListener('dragstart', stopAnim);
-    document.getElementById('bookmarklet-link-modal').addEventListener('dragstart', stopAnim);
+    installBtn.addEventListener('click', () => resetAnim(false));
+    closeBtn.addEventListener('click',   () => scheduleAnim(800));
+    overlay.addEventListener('click', e => { if (e.target === overlay) scheduleAnim(800); });
 
-    function scheduleAnim() {
-      animTimer = setTimeout(() => {
-        runAnim();
-        scheduleAnim();
-      }, 4200);
-    }
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) resetAnim(false);
+      else scheduleAnim(1500);
+    });
 
-    setTimeout(scheduleAnim, 2800);
+    scheduleAnim(2800);
   </script>
 </body>
 </html>
