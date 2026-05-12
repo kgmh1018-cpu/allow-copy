@@ -147,11 +147,9 @@ function runAnim() {
   safetyTimer = setTimeout(() => resetAnim(), ANIM_SAFETY);
 
   bookmarkBar.style.transition = 'none';
-  bookmarkBar.style.opacity    = '1';
   bookmarkBar.style.transform  = 'translateY(0)';
   void bookmarkBar.offsetHeight;
   const slotRect = bmSlot.getBoundingClientRect();
-  bookmarkBar.style.opacity    = '';
   bookmarkBar.style.transform  = '';
   bookmarkBar.style.transition = '';
 
