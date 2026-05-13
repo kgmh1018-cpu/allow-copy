@@ -462,7 +462,7 @@ document.addEventListener('dragstart', (e) => {
   const btn = e.target.closest('.drag-btn');
   if (btn) {
     isDraggingBtn = true;
-    resetAnim();
+    resetAnim(false); // 인자로 false를 주어 드래그 중에는 데모가 절대 다시 켜지지 않도록 완벽 정지
     setTimeout(() => btn.classList.add('is-dimmed'), 0);
     
     const ghost = document.getElementById('custom-drag-ghost');
@@ -478,6 +478,7 @@ document.addEventListener('dragend', (e) => {
   if (btn) {
     isDraggingBtn = false;
     btn.classList.remove('is-pressed', 'is-dimmed');
+    scheduleAnim(1500); // 드래그가 끝난 뒤(버튼을 놓은 뒤) 1.5초 후 자연스럽게 데모 재개
   }
 }, true);
 
