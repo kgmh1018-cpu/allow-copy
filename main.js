@@ -313,22 +313,25 @@ function runAnim() {
     fakeCursor.style.transform  = 'scale(1)';
     bmSlot.style.transition     = 'transform 0.22s cubic-bezier(0.34,1.55,0.64,1)';
     bmSlot.style.transform      = 'scale(1) translateZ(0)';
-    showDemoToast();
   }, 3820);
+
+  addTimer(() => {
+    showDemoToast();
+  }, 4050);
 
   addTimer(() => {
     fakeCursor.style.transition = 'opacity 0.4s ease';
     fakeCursor.style.opacity    = '0';
-  }, 4500);
+  }, 4700);
 
   addTimer(() => {
     dragBtn.style.transition = 'opacity 0.55s ease';
     dragBtn.classList.remove('is-dimmed');
-  }, 5500);
+  }, 5800);
 
   addTimer(() => {
     bookmarkBar.classList.remove('visible');
-  }, 6300);
+  }, 6600);
 
   addTimer(() => {
     bmSlot.classList.remove('success');
@@ -340,7 +343,7 @@ function runAnim() {
     clearTimeout(safetyTimer);
     animLock = false;
     scheduleAnim();
-  }, 6620);
+  }, 7000);
 }
 
 dragBtn.addEventListener('dragstart', () => resetAnim());
