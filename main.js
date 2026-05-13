@@ -73,7 +73,9 @@ function addTimer(fn, delay) {
   return id;
 }
 
-function easeOutQuart(t) { return 1 - Math.pow(1 - t, 4); }
+function easeOutQuart(t)   { return 1 - Math.pow(1 - t, 4); }
+function easeOutCubic(t)   { return 1 - Math.pow(1 - t, 3); }
+function easeInOutSine(t)  { return -(Math.cos(Math.PI * t) - 1) / 2; }
 
 function cancelRafs() {
   rafIds.forEach(cancelAnimationFrame);
@@ -103,6 +105,21 @@ function animDrag(cFx, cFy, cTx, cTy, gFx, gFy, gTx, gTy, dur, onDone) {
     dragGhost.style.top       = gy + 'px';
     dragGhost.style.transform = `scale(1) rotate(${tilt}deg)`;
     prevGx = gx;
+    if (raw < 1) { const id = requestAnimationFrame(tick); rafIds.push(id); }
+    else if (onDone) onDone();
+  }
+  const id = requestAnimationFrame(tick); rafIds.push(id);
+}
+
+function animCursor(toX, toY, dur, easing, onDone) {
+  const fromX = parseFloat(fakeCursor.style.left) || 0;
+  const fromY = parseFloat(fakeCursor.style.top)  || 0;
+  const start = performance.now();
+  function tick(now) {
+    const raw = Math.min((now - start) / dur, 1);
+    const t = easing(raw);
+    fakeCursor.style.left = (fromX + (toX - fromX) * t) + 'px';
+    fakeCursor.style.top  = (fromY + (toY - fromY) * t) + 'px';
     if (raw < 1) { const id = requestAnimationFrame(tick); rafIds.push(id); }
     else if (onDone) onDone();
   }
@@ -213,6 +230,12 @@ function runAnim() {
   const gToX   = slotRect.left + slotRect.width  / 2 - ghostW / 2;
   const gToY   = slotRect.top  + slotRect.height / 2 - ghostH / 2;
 
+  const cRetractX = cToX + 22;
+  const cRetractY = cToY + 38;
+
+  const cClickX = cToX + 3;
+  const cClickY = cToY + 5;
+
   fakeCursor.style.transition = 'none';
   fakeCursor.style.left       = cFromX + 'px';
   fakeCursor.style.top        = cFromY + 'px';
@@ -274,12 +297,16 @@ function runAnim() {
     bmSlot.style.transform  = 'scale(1) translateZ(0)';
   }, 2180);
 
+  addTimer(() => { animCursor(cRetractX, cRetractY, 520, easeInOutSine, null); }, 2380);
+
+  addTimer(() => { animCursor(cClickX, cClickY, 580, easeOutCubic, null); }, 3020);
+
   addTimer(() => {
     fakeCursor.style.transition = 'transform 0.11s cubic-bezier(0.4,0,0.6,1)';
     fakeCursor.style.transform  = 'scale(0.88)';
     bmSlot.style.transition     = 'transform 0.11s cubic-bezier(0.4,0,0.6,1)';
     bmSlot.style.transform      = 'scale(0.93) translateZ(0)';
-  }, 2520);
+  }, 3700);
 
   addTimer(() => {
     fakeCursor.style.transition = 'transform 0.22s cubic-bezier(0.34,1.55,0.64,1)';
@@ -287,30 +314,33 @@ function runAnim() {
     bmSlot.style.transition     = 'transform 0.22s cubic-bezier(0.34,1.55,0.64,1)';
     bmSlot.style.transform      = 'scale(1) translateZ(0)';
     showDemoToast();
-  }, 2650);
+  }, 3820);
 
   addTimer(() => {
     fakeCursor.style.transition = 'opacity 0.4s ease';
     fakeCursor.style.opacity    = '0';
-  }, 3300);
+  }, 4500);
 
   addTimer(() => {
     dragBtn.style.transition = 'opacity 0.55s ease';
     dragBtn.classList.remove('is-dimmed');
-  }, 4400);
+  }, 5500);
+
+  addTimer(() => {
+    bookmarkBar.classList.remove('visible');
+  }, 6300);
 
   addTimer(() => {
     bmSlot.classList.remove('success');
     bmSlot.innerHTML = SLOT_EMPTY_HTML;
     bmSlot.style.transform  = '';
     bmSlot.style.transition = '';
-    bookmarkBar.classList.remove('visible');
     dragGhost.style.transition = 'none';
     dragGhost.style.opacity    = '0';
     clearTimeout(safetyTimer);
     animLock = false;
     scheduleAnim();
-  }, 5500);
+  }, 6620);
 }
 
 dragBtn.addEventListener('dragstart', () => resetAnim());
