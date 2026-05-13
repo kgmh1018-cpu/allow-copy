@@ -58,11 +58,12 @@ const pageEl      = document.querySelector('.page');
 const SLOT_EMPTY_HTML  = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Allow-Copy`;
 const SLOT_FILLED_HTML = `<div style="width:12px;height:12px;border-radius:3px;background:#1d1d1f;flex-shrink:0;"></div>Allow-Copy`;
 
-const ANIM_CYCLE  = 4500;
-const ANIM_SAFETY = 11000;
+const ANIM_CYCLE  = 5000;
+const ANIM_SAFETY = 9000;
 
 let animLock    = false;
 let animTimers  = [];
+let rafIds      = [];
 let nextTimer   = null;
 let safetyTimer = null;
 
@@ -70,6 +71,42 @@ function addTimer(fn, delay) {
   const id = setTimeout(fn, delay);
   animTimers.push(id);
   return id;
+}
+
+function easeOutQuart(t) { return 1 - Math.pow(1 - t, 4); }
+
+function cancelRafs() {
+  rafIds.forEach(cancelAnimationFrame);
+  rafIds = [];
+}
+
+function animDrag(cFx, cFy, cTx, cTy, gFx, gFy, gTx, gTy, dur, onDone) {
+  const cdx = cTx - cFx, cdy = cTy - cFy;
+  const cp1x = cFx + cdx * 0.12, cp1y = cFy + cdy * 0.04;
+  const cp2x = cFx + cdx * 0.78, cp2y = cFy + cdy * 0.58;
+  const gdx = gTx - gFx, gdy = gTy - gFy;
+  const gp1x = gFx + gdx * 0.12, gp1y = gFy + gdy * 0.04;
+  const gp2x = gFx + gdx * 0.78, gp2y = gFy + gdy * 0.58;
+  let prevGx = gFx;
+  const start = performance.now();
+  function tick(now) {
+    const raw = Math.min((now - start) / dur, 1);
+    const t = easeOutQuart(raw), mt = 1 - t;
+    const cx = mt*mt*mt*cFx + 3*mt*mt*t*cp1x + 3*mt*t*t*cp2x + t*t*t*cTx;
+    const cy = mt*mt*mt*cFy + 3*mt*mt*t*cp1y + 3*mt*t*t*cp2y + t*t*t*cTy;
+    fakeCursor.style.left = cx + 'px';
+    fakeCursor.style.top  = cy + 'px';
+    const gx = mt*mt*mt*gFx + 3*mt*mt*t*gp1x + 3*mt*t*t*gp2x + t*t*t*gTx;
+    const gy = mt*mt*mt*gFy + 3*mt*mt*t*gp1y + 3*mt*t*t*gp2y + t*t*t*gTy;
+    const tilt = Math.max(-5, Math.min(5, (gx - prevGx) * 0.65));
+    dragGhost.style.left      = gx + 'px';
+    dragGhost.style.top       = gy + 'px';
+    dragGhost.style.transform = `scale(1) rotate(${tilt}deg)`;
+    prevGx = gx;
+    if (raw < 1) { const id = requestAnimationFrame(tick); rafIds.push(id); }
+    else if (onDone) onDone();
+  }
+  const id = requestAnimationFrame(tick); rafIds.push(id);
 }
 
 function scheduleAnim(delay = ANIM_CYCLE) {
@@ -80,16 +117,22 @@ function scheduleAnim(delay = ANIM_CYCLE) {
 function resetAnim(reschedule = true) {
   animTimers.forEach(clearTimeout);
   animTimers = [];
+  cancelRafs();
   clearTimeout(nextTimer);
   clearTimeout(safetyTimer);
   animLock = false;
 
   fakeCursor.style.transition = 'none';
   fakeCursor.style.opacity    = '0';
-  fakeCursor.style.transform  = 'scale(1) translateZ(0)';
+  fakeCursor.style.transform  = 'scale(1)';
+  fakeCursor.style.left       = '';
+  fakeCursor.style.top        = '';
 
   dragGhost.style.transition  = 'none';
   dragGhost.style.opacity     = '0';
+  dragGhost.style.left        = '';
+  dragGhost.style.top         = '';
+  dragGhost.style.transform   = '';
 
   bookmarkBar.style.transition = 'none';
   bookmarkBar.classList.remove('visible');
@@ -157,126 +200,104 @@ function runAnim() {
   bookmarkBar.style.transition = '';
 
   const btnRect = dragBtn.getBoundingClientRect();
-  const ghostW  = dragGhost.offsetWidth;
-  const ghostH  = dragGhost.offsetHeight;
+  const ghostW  = dragGhost.offsetWidth  || 120;
+  const ghostH  = dragGhost.offsetHeight || 36;
 
-  const cursorOrigin = { x: btnRect.left  + btnRect.width  / 2 - 10, y: btnRect.top  + btnRect.height / 2 - 10 };
-  const ghostOrigin  = { x: btnRect.left  + btnRect.width  / 2 - ghostW / 2, y: btnRect.top  + btnRect.height / 2 - ghostH / 2 };
+  const cFromX = btnRect.left  + btnRect.width  / 2 - 10;
+  const cFromY = btnRect.top   + btnRect.height / 2 - 10;
+  const cToX   = slotRect.left + slotRect.width  / 2 - 10;
+  const cToY   = slotRect.top  + slotRect.height / 2 - 10;
 
-  const cursorDxSlot    = slotRect.left + slotRect.width  / 2 - 10      - cursorOrigin.x;
-  const cursorDySlot    = slotRect.top  + slotRect.height / 2 - 10      - cursorOrigin.y;
-  const cursorDxRetract = cursorDxSlot + 20;
-  const cursorDyRetract = cursorDySlot + 40;
-  const ghostDxSlot     = slotRect.left + slotRect.width  / 2 - ghostW / 2 - ghostOrigin.x;
-  const ghostDySlot     = slotRect.top  + slotRect.height / 2 - ghostH / 2 - ghostOrigin.y;
+  const gFromX = btnRect.left  + btnRect.width  / 2 - ghostW / 2;
+  const gFromY = btnRect.top   + btnRect.height / 2 - ghostH / 2;
+  const gToX   = slotRect.left + slotRect.width  / 2 - ghostW / 2;
+  const gToY   = slotRect.top  + slotRect.height / 2 - ghostH / 2;
 
   fakeCursor.style.transition = 'none';
-  fakeCursor.style.left       = cursorOrigin.x + 'px';
-  fakeCursor.style.top        = cursorOrigin.y + 'px';
-  fakeCursor.style.transform  = 'translate3d(0,0,0) scale(1)';
+  fakeCursor.style.left       = cFromX + 'px';
+  fakeCursor.style.top        = cFromY + 'px';
+  fakeCursor.style.transform  = 'scale(1)';
   fakeCursor.style.opacity    = '0';
   void fakeCursor.offsetHeight;
 
   dragGhost.style.transition = 'none';
-  dragGhost.style.left       = ghostOrigin.x + 'px';
-  dragGhost.style.top        = ghostOrigin.y + 'px';
-  dragGhost.style.transform  = 'translate3d(0,0,0) scale(1.04) rotate(-6deg)';
+  dragGhost.style.left       = gFromX + 'px';
+  dragGhost.style.top        = gFromY + 'px';
+  dragGhost.style.transform  = 'scale(1.02) rotate(-3deg)';
   dragGhost.style.opacity    = '0';
 
   addTimer(() => {
-    fakeCursor.style.transition = 'opacity 0.22s ease';
+    fakeCursor.style.transition = 'opacity 0.3s ease';
     fakeCursor.style.opacity    = '1';
-  }, 30);
+  }, 80);
 
   addTimer(() => {
-    fakeCursor.style.transition = 'transform 0.1s ease';
-    fakeCursor.style.transform  = 'translate3d(0,0,0) scale(0.78)';
-  }, 400);
+    fakeCursor.style.transition = 'transform 0.12s cubic-bezier(0.4,0,0.6,1)';
+    fakeCursor.style.transform  = 'scale(0.88)';
+  }, 520);
 
   addTimer(() => {
-    fakeCursor.style.transition = 'transform 0.15s cubic-bezier(0.34,1.56,0.64,1)';
-    fakeCursor.style.transform  = 'translate3d(0,0,0) scale(1)';
-  }, 510);
+    fakeCursor.style.transition = 'transform 0.22s cubic-bezier(0.34,1.55,0.64,1)';
+    fakeCursor.style.transform  = 'scale(1)';
 
-  addTimer(() => {
-    void dragGhost.offsetHeight;
-    dragBtn.style.transition   = 'opacity 0.3s ease';
+    dragBtn.style.transition = 'opacity 0.35s ease';
     dragBtn.classList.add('is-dimmed');
-    dragGhost.style.boxShadow  = '0 12px 32px rgba(0,0,0,0.22)';
-    dragGhost.style.transition = 'opacity 0.15s ease';
-    dragGhost.style.opacity    = '0.92';
-  }, 750);
+
+    dragGhost.style.transition = 'opacity 0.22s ease, transform 0.3s cubic-bezier(0.34,1.4,0.64,1)';
+    dragGhost.style.opacity    = '1';
+    dragGhost.style.transform  = 'scale(1) rotate(0deg)';
+    dragGhost.style.boxShadow  = '0 8px 28px rgba(0,0,0,0.18)';
+  }, 660);
 
   addTimer(() => {
     bookmarkBar.style.transition = '';
     bookmarkBar.classList.add('visible');
-  }, 900);
+  }, 840);
 
   addTimer(() => {
-    fakeCursor.style.transition = 'transform 0.75s cubic-bezier(0.25,1.3,0.4,1)';
-    fakeCursor.style.transform  = `translate3d(${cursorDxSlot}px,${cursorDySlot}px,0) scale(1)`;
-
-    dragGhost.style.transition = 'transform 0.85s cubic-bezier(0.25,1.3,0.4,1) 0.04s, opacity 0.15s ease';
-    dragGhost.style.transform  = `translate3d(${ghostDxSlot}px,${ghostDySlot}px,0) scale(1.04) rotate(0deg)`;
-  }, 1200);
+    animDrag(cFromX, cFromY, cToX, cToY, gFromX, gFromY, gToX, gToY, 920, null);
+  }, 1080);
 
   addTimer(() => {
     bmSlot.classList.add('success');
     bmSlot.innerHTML = SLOT_FILLED_HTML;
-    bmSlot.style.transition = 'transform 0.1s ease';
-    bmSlot.style.transform  = 'scale(1.06) translateZ(0)';
+    bmSlot.style.transition = 'transform 0.12s cubic-bezier(0.4,0,0.2,1)';
+    bmSlot.style.transform  = 'scale(1.07) translateZ(0)';
 
-    dragGhost.style.transition = 'transform 0.24s cubic-bezier(0.34,1.56,0.64,1), opacity 0.18s ease';
-    dragGhost.style.transform  = `translate3d(${ghostDxSlot}px,${ghostDySlot}px,0) scale(0.2)`;
+    dragGhost.style.transition = 'opacity 0.2s ease, transform 0.2s cubic-bezier(0.4,0,1,1)';
     dragGhost.style.opacity    = '0';
-
-    fakeCursor.style.transition = 'transform 0.08s ease';
-    fakeCursor.style.transform  = `translate3d(${cursorDxSlot}px,${cursorDySlot}px,0) scale(0.78)`;
-    addTimer(() => {
-      fakeCursor.style.transition = 'transform 0.15s cubic-bezier(0.34,1.56,0.64,1)';
-      fakeCursor.style.transform  = `translate3d(${cursorDxSlot}px,${cursorDySlot}px,0) scale(1)`;
-    }, 100);
-  }, 2200);
+    dragGhost.style.transform  = 'scale(0.7) rotate(0deg)';
+  }, 2040);
 
   addTimer(() => {
-    bmSlot.style.transition = 'transform 0.18s cubic-bezier(0.34,1.56,0.64,1)';
+    bmSlot.style.transition = 'transform 0.3s cubic-bezier(0.34,1.55,0.64,1)';
     bmSlot.style.transform  = 'scale(1) translateZ(0)';
-  }, 2310);
+  }, 2180);
 
   addTimer(() => {
-    fakeCursor.style.transition = 'transform 0.35s cubic-bezier(0.25,1,0.5,1)';
-    fakeCursor.style.transform  = `translate3d(${cursorDxRetract}px,${cursorDyRetract}px,0) scale(1)`;
-  }, 2700);
+    fakeCursor.style.transition = 'transform 0.11s cubic-bezier(0.4,0,0.6,1)';
+    fakeCursor.style.transform  = 'scale(0.88)';
+    bmSlot.style.transition     = 'transform 0.11s cubic-bezier(0.4,0,0.6,1)';
+    bmSlot.style.transform      = 'scale(0.93) translateZ(0)';
+  }, 2520);
 
   addTimer(() => {
-    fakeCursor.style.transition = 'transform 0.45s cubic-bezier(0.25,1,0.5,1)';
-    fakeCursor.style.transform  = `translate3d(${cursorDxSlot}px,${cursorDySlot}px,0) scale(1)`;
-  }, 3200);
-
-  addTimer(() => {
-    fakeCursor.style.transition = 'transform 0.08s ease';
-    fakeCursor.style.transform  = `translate3d(${cursorDxSlot}px,${cursorDySlot}px,0) scale(0.78)`;
-    bmSlot.style.transition     = 'transform 0.08s ease';
-    bmSlot.style.transform      = 'scale(0.88) translateZ(0)';
-  }, 3750);
-
-  addTimer(() => {
-    fakeCursor.style.transition = 'transform 0.15s cubic-bezier(0.34,1.56,0.64,1)';
-    fakeCursor.style.transform  = `translate3d(${cursorDxSlot}px,${cursorDySlot}px,0) scale(1)`;
-    bmSlot.style.transition     = 'transform 0.18s cubic-bezier(0.34,1.56,0.64,1)';
+    fakeCursor.style.transition = 'transform 0.22s cubic-bezier(0.34,1.55,0.64,1)';
+    fakeCursor.style.transform  = 'scale(1)';
+    bmSlot.style.transition     = 'transform 0.22s cubic-bezier(0.34,1.55,0.64,1)';
     bmSlot.style.transform      = 'scale(1) translateZ(0)';
     showDemoToast();
-  }, 3870);
+  }, 2650);
 
   addTimer(() => {
-    fakeCursor.style.transition = 'opacity 0.3s ease';
+    fakeCursor.style.transition = 'opacity 0.4s ease';
     fakeCursor.style.opacity    = '0';
-  }, 4300);
+  }, 3300);
 
   addTimer(() => {
-    dragBtn.style.transition = 'opacity 0.6s ease';
+    dragBtn.style.transition = 'opacity 0.55s ease';
     dragBtn.classList.remove('is-dimmed');
-  }, 5600);
+  }, 4400);
 
   addTimer(() => {
     bmSlot.classList.remove('success');
@@ -289,7 +310,7 @@ function runAnim() {
     clearTimeout(safetyTimer);
     animLock = false;
     scheduleAnim();
-  }, 6400);
+  }, 5500);
 }
 
 dragBtn.addEventListener('dragstart', () => resetAnim());
