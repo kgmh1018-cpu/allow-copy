@@ -9,12 +9,14 @@
 
 ## 파일 간 의존
 - `BOOKMARKLET_CODE` 수정 → `href` 자동 반영 (별도 작업 불필요)
-- 애니메이션 DOM: `#bookmarkBar` `#bmSlot` `#fakeCursor` (index.html)
-- 애니메이션 타이밍: `runAnim()` setTimeout 체인 / 주기 `ANIM_CYCLE=4200ms`
-- 모달 열림·탭숨김·드래그 시작 → `resetAnim()` 자동 호출
+- 애니메이션 DOM: `#bookmarkBar` `#bmSlot` `#fakeCursor` `#demoTextWrap` `#demoTextHl` (index.html)
+- 애니메이션 타이밍: `runAnim()` addTimer 체인 / 대기 주기 `ANIM_CYCLE=2500ms` / 안전 타이머 `ANIM_SAFETY=12000ms`
+- 커서 이동 함수: `animCursor` (직선) / `animCursorCurve(toX, toY, dur, easing, onTick, onDone)` (베지어 곡선, onTick(t)으로 clip-path 등 동기 구동 가능)
+- 모달 열림·탭숨김·드래그 시작·`prefers-reduced-motion` 활성화 → `resetAnim()` 자동 호출
+- `resetAnim` 초기화 대상: fakeCursor / dragGhost / bookmarkBar / bmSlot / dragBtn / `#demoTextHl` clip-path / `.wiggle` 클래스
 
 ## FAQ 항목 추가 시
-`.faq-list` 안 `.faq-item` 블록 복사 → `id`와 `data-target` 일치 (예: `faq5`)
+`.faq-list` 안 `.faq-item` 블록 복사 → `id`와 `data-target` 일치 (예: `faq7`)
 
 ## 이 파일 업데이트 규칙
 구조·의존관계·금지사항 바뀔 때만 수정. 작업 히스토리 적지 않음. 항상 짧게 유지.

@@ -170,7 +170,10 @@ function animCursorCurve(toX, toY, dur, easing, onTick, onDone) {
   const id = requestAnimationFrame(tick); rafIds.push(id);
 }
 
+const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+
 function scheduleAnim(delay = ANIM_CYCLE) {
+  if (prefersReduced.matches) return;
   clearTimeout(nextTimer);
   nextTimer = setTimeout(runAnim, delay);
 }
@@ -276,10 +279,10 @@ function runAnim() {
   const textStartY = wrapRect.top  + wrapRect.height / 2 - 10;
   const textEndX   = wrapRect.right - 10;
 
-  const cBtnX  = btnRect.left  + btnRect.width  / 2 - 10;
-  const cBtnY  = btnRect.top   + btnRect.height / 2 - 10;
-  const cSlotX = slotRect.left + slotRect.width  / 2 - 10;
-  const cSlotY = slotRect.top  + slotRect.height / 2 - 10;
+  const cBtnX  = btnRect.left  + btnRect.width  / 2 - 10 + 6;
+  const cBtnY  = btnRect.top   + btnRect.height / 2 - 10 + 4;
+  const cSlotX = slotRect.left + slotRect.width  / 2 - 10 + 5;
+  const cSlotY = slotRect.top  + slotRect.height / 2 - 10 - 3;
 
   const gFromX = btnRect.left  + btnRect.width  / 2 - ghostW / 2;
   const gFromY = btnRect.top   + btnRect.height / 2 - ghostH / 2;
@@ -318,24 +321,24 @@ function runAnim() {
 
   addTimer(() => {
     animCursor(textStartX, textStartY, 220, easeOutQuart, null);
-  }, 1440);
+  }, 1520);
 
   addTimer(() => {
     fakeCursor.classList.add('wiggle');
-  }, 1680);
+  }, 1800);
 
   addTimer(() => {
     fakeCursor.classList.remove('wiggle');
-  }, 2080);
+  }, 2200);
 
   addTimer(() => {
     animCursorCurve(cBtnX, cBtnY, 700, easeOutQuart, null, null);
-  }, 2300);
+  }, 2500);
 
   addTimer(() => {
     fakeCursor.style.transition = 'transform 0.12s cubic-bezier(0.4,0,0.6,1)';
     fakeCursor.style.transform  = 'scale(0.88)';
-  }, 3080);
+  }, 3200);
 
   addTimer(() => {
     fakeCursor.style.transition = 'transform 0.22s cubic-bezier(0.34,1.55,0.64,1)';
@@ -351,16 +354,16 @@ function runAnim() {
     dragGhost.style.opacity   = '1';
     dragGhost.style.transform = 'scale(1) rotate(0deg)';
     dragGhost.style.boxShadow = '0 8px 28px rgba(0,0,0,0.18)';
-  }, 3210);
+  }, 3330);
 
   addTimer(() => {
     bookmarkBar.style.transition = '';
     bookmarkBar.classList.add('visible');
-  }, 3400);
+  }, 3520);
 
   addTimer(() => {
     animDrag(cBtnX, cBtnY, cSlotX, cSlotY, gFromX, gFromY, gToX, gToY, 900, null);
-  }, 3620);
+  }, 3740);
 
   addTimer(() => {
     bmSlot.classList.add('success');
@@ -371,23 +374,23 @@ function runAnim() {
     dragGhost.style.transition = 'opacity 0.2s ease, transform 0.2s cubic-bezier(0.4,0,1,1)';
     dragGhost.style.opacity    = '0';
     dragGhost.style.transform  = 'scale(0.7) rotate(0deg)';
-  }, 4560);
+  }, 4680);
 
   addTimer(() => {
     bmSlot.style.transition = 'transform 0.3s cubic-bezier(0.34,1.55,0.64,1)';
     bmSlot.style.transform  = 'scale(1) translateZ(0)';
-  }, 4700);
+  }, 4820);
 
-  addTimer(() => { animCursor(cRetractX, cRetractY, 520, easeInOutSine, null); }, 4900);
+  addTimer(() => { animCursor(cRetractX, cRetractY, 520, easeInOutSine, null); }, 5020);
 
-  addTimer(() => { animCursor(cClickX, cClickY, 560, easeOutCubic, null); }, 5500);
+  addTimer(() => { animCursor(cClickX, cClickY, 560, easeOutCubic, null); }, 5700);
 
   addTimer(() => {
     fakeCursor.style.transition = 'transform 0.11s cubic-bezier(0.4,0,0.6,1)';
     fakeCursor.style.transform  = 'scale(0.88)';
     bmSlot.style.transition     = 'transform 0.11s cubic-bezier(0.4,0,0.6,1)';
     bmSlot.style.transform      = 'scale(0.93) translateZ(0)';
-  }, 6150);
+  }, 6350);
 
   addTimer(() => {
     fakeCursor.style.transition = 'transform 0.22s cubic-bezier(0.34,1.55,0.64,1)';
@@ -395,26 +398,26 @@ function runAnim() {
     bmSlot.style.transition     = 'transform 0.22s cubic-bezier(0.34,1.55,0.64,1)';
     bmSlot.style.transform      = 'scale(1) translateZ(0)';
     showDemoToast();
-  }, 6270);
+  }, 6470);
 
   addTimer(() => {
     animCursorCurve(textStartX, textStartY, 620, easeOutQuart, null, null);
-  }, 6700);
+  }, 6900);
 
   addTimer(() => {
     animCursorCurve(textEndX, textStartY, 700, easeOutCubic, (t) => {
       if (demoTextHl) demoTextHl.style.clipPath = `inset(0 ${Math.max(0, (1 - t) * 100)}% 0 0 round 6px)`;
     }, null);
-  }, 7450);
+  }, 7750);
 
   addTimer(() => {
     fakeCursor.style.transition = 'opacity 0.4s ease';
     fakeCursor.style.opacity    = '0';
-  }, 8500);
+  }, 9000);
 
   addTimer(() => {
     bookmarkBar.classList.remove('visible');
-  }, 9200);
+  }, 9700);
 
   addTimer(() => {
     bmSlot.classList.remove('success');
@@ -428,7 +431,7 @@ function runAnim() {
     clearTimeout(safetyTimer);
     animLock = false;
     scheduleAnim();
-  }, 9500);
+  }, 10000);
 }
 
 dragBtn.addEventListener('dragstart', () => resetAnim());
@@ -439,6 +442,11 @@ overlay.addEventListener('click', e => { if (e.target === overlay) scheduleAnim(
 
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) resetAnim(false);
+  else scheduleAnim(1500);
+});
+
+prefersReduced.addEventListener('change', () => {
+  if (prefersReduced.matches) resetAnim(false);
   else scheduleAnim(1500);
 });
 
