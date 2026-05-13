@@ -272,6 +272,11 @@ body {
 .mobile-hint.visible {
   display: flex;
 }
+.mobile-hint-link {
+  color: #007aff;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
 
 /* ── Modal overlay ── */
 .modal-overlay {
