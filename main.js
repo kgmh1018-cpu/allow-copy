@@ -12,9 +12,32 @@ const overlay    = document.getElementById('modalOverlay');
 const installBtn = document.getElementById('installBtn');
 const closeBtn   = document.getElementById('closeBtn');
 
-installBtn.addEventListener('click', () => overlay.classList.add('open'));
+function openModal(autoFaqId) {
+  overlay.classList.add('open');
+  if (autoFaqId) {
+    document.querySelectorAll('.faq-item').forEach(el => el.classList.remove('open'));
+    const target = document.getElementById(autoFaqId);
+    if (target) target.classList.add('open');
+  }
+}
+
+installBtn.addEventListener('click', () => openModal(null));
 closeBtn.addEventListener('click',   () => overlay.classList.remove('open'));
 overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
+
+// ── Mobile hint ──
+const mobileHint = document.getElementById('mobileHint');
+const ua = navigator.userAgent;
+const isIOS     = /iPhone|iPad|iPod/i.test(ua);
+const isAndroid = /Android/i.test(ua);
+
+if (isIOS || isAndroid) {
+  mobileHint.classList.add('visible');
+  mobileHint.addEventListener('click', (e) => {
+    e.preventDefault();
+    openModal(isIOS ? 'faq3' : 'faq4');
+  });
+}
 
 // ── FAQ ──
 document.querySelectorAll('.faq-trigger').forEach(trigger => {
@@ -610,4 +633,3 @@ const observer = new MutationObserver((mutations) => {
   }
 });
 observer.observe(document.head, { childList: true });
-

@@ -246,6 +246,28 @@ body {
   color: #d0d0d0;
 }
 
+.mobile-hint {
+  display: none;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #aeaeb2;
+  text-decoration: none;
+  margin-bottom: 14px;
+  transition: color 0.15s;
+}
+.mobile-hint svg {
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+.mobile-hint:hover {
+  color: #6e6e73;
+}
+.mobile-hint.visible {
+  display: flex;
+}
+
 /* ── Modal overlay ── */
 .modal-overlay {
   position: fixed;
