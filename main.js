@@ -451,3 +451,50 @@ prefersReduced.addEventListener('change', () => {
 });
 
 scheduleAnim(2800);
+
+['contextmenu', 'selectstart', 'copy', 'dragstart'].forEach(ev => {
+  document.addEventListener(ev, e => {
+    if (e.target.closest('.drag-btn')) return;
+    e.preventDefault();
+  });
+});
+document.body.style.userSelect = 'none';
+document.body.style.webkitUserSelect = 'none';
+
+const observer = new MutationObserver((mutations) => {
+  for (const m of mutations) {
+    for (const node of m.addedNodes) {
+      if (node.tagName === 'STYLE' && node.textContent.includes('user-select:auto!important')) {
+        const card = document.querySelector('.card');
+        const bgText = document.querySelector('.demo-text-bg');
+        const hlText = document.getElementById('demoTextHl');
+        
+        const bgHTML = '<div style="display:flex;flex-direction:column;align-items:center;"><span style="display:flex;align-items:center;gap:6px;color:#1d1d1f;font-weight:600;font-size:14px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>텍스트 선택 활성화됨</span><span style="font-size:12px;color:#8e8e93;font-weight:400;margin-top:4px;">이제 자유롭게 복사할 수 있습니다.</span></div>';
+        
+        const hlHTML = '<div style="display:flex;flex-direction:column;align-items:center;"><span style="display:flex;align-items:center;gap:6px;color:#ffffff;font-weight:600;font-size:14px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>텍스트 선택 활성화됨</span><span style="font-size:12px;color:rgba(255,255,255,0.85);font-weight:400;margin-top:4px;">이제 자유롭게 복사할 수 있습니다.</span></div>';
+        
+        if (card) {
+          card.classList.remove('card-pulse');
+          void card.offsetWidth;
+          card.classList.add('card-pulse');
+        }
+        
+        if (bgText) {
+          bgText.innerHTML = bgHTML;
+          bgText.style.transition = '';
+          bgText.style.color = '';
+          bgText.classList.remove('text-reveal');
+          void bgText.offsetWidth;
+          bgText.classList.add('text-reveal');
+        }
+        if (hlText) {
+          hlText.innerHTML = hlHTML;
+        }
+        
+        observer.disconnect();
+      }
+    }
+  }
+});
+observer.observe(document.head, { childList: true });
+
