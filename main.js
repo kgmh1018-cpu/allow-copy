@@ -434,8 +434,6 @@ function runAnim() {
   }, 10000);
 }
 
-dragBtn.addEventListener('dragstart', () => resetAnim());
-
 installBtn.addEventListener('click', () => resetAnim(false));
 closeBtn.addEventListener('click',   () => scheduleAnim(800));
 overlay.addEventListener('click', e => { if (e.target === overlay) scheduleAnim(800); });
@@ -452,12 +450,57 @@ prefersReduced.addEventListener('change', () => {
 
 scheduleAnim(2800);
 
-['contextmenu', 'selectstart', 'copy', 'dragstart'].forEach(ev => {
-  document.addEventListener(ev, e => {
-    if (e.target.closest('.drag-btn')) return;
+// --- 드래그 및 복사 방지 로직 통합 ---
+let isDraggingBtn = false;
+
+// 1. 물리적 타격감 (눌림 효과)
+dragBtn.addEventListener('mousedown', () => dragBtn.classList.add('is-pressed'));
+window.addEventListener('mouseup', () => dragBtn.classList.remove('is-pressed'));
+
+// 2. 드래그 시작 (★ 북마크릿의 차단보다 우선 실행되도록 true 옵션 사용)
+document.addEventListener('dragstart', (e) => {
+  const btn = e.target.closest('.drag-btn');
+  if (btn) {
+    isDraggingBtn = true;
+    resetAnim();
+    setTimeout(() => btn.classList.add('is-dimmed'), 0);
+    
+    const ghost = document.getElementById('custom-drag-ghost');
+    if (ghost && e.dataTransfer) {
+      e.dataTransfer.setDragImage(ghost, 55, 17);
+    }
+  }
+}, true);
+
+// 3. 드래그 종료 시 원상복구
+document.addEventListener('dragend', (e) => {
+  const btn = e.target.closest('.drag-btn');
+  if (btn) {
+    isDraggingBtn = false;
+    btn.classList.remove('is-pressed', 'is-dimmed');
+  }
+}, true);
+
+// 4. 🚫 금지 마크 대신 ➕ 복사 마크 띄우기 (버튼 끌고 있을 때만)
+document.addEventListener('dragover', (e) => {
+  if (isDraggingBtn) {
     e.preventDefault();
-  });
+    e.dataTransfer.dropEffect = 'copy'; 
+  }
+}, true);
+
+// 화면 빈 곳에 떨어뜨렸을 때 오작동 방지
+document.addEventListener('drop', (e) => {
+  if (isDraggingBtn) e.preventDefault();
+}, true);
+
+// 5. 기본 복사 방지 (dragstart 분리 후 간소화)
+['contextmenu', 'selectstart', 'copy'].forEach(ev => {
+  document.addEventListener(ev, e => {
+    if (!e.target.closest('.drag-btn')) e.preventDefault();
+  }, true);
 });
+
 document.body.style.userSelect = 'none';
 document.body.style.webkitUserSelect = 'none';
 
