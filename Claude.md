@@ -7,8 +7,11 @@
 - `href`는 main.js가 런타임 주입. HTML에 하드코딩 금지
 - npm·빌드 도구 도입 금지
 
-## 파일 간 의존
+## 파일 간 의존 및 핵심 상태 
 - `BOOKMARKLET_CODE` 수정 → `href` 자동 반영 (별도 작업 불필요)
+- **상태 전환 (isUnlocked):** 북마크릿이 현재 페이지에서 실행되어 `<style>`(`user-select:auto!important`)이 주입되면, `MutationObserver`가 이를 감지하고 `isUnlocked = true`로 전환.
+  - 이 과정은 북마크릿이 일으키는 '페이지 강제 변형'을 방어하는 대신, '성공 상태(UI 전환)'로 승화시키는 핵심 기믹임. Observer 해제 및 로직 변경 금지.
+- **클릭 이벤트 방어:** `dragBtn`의 `click` 핸들러 내 `e.preventDefault()`는 절대 삭제 금지 (북마크릿의 브라우저 기본 실행을 막고, 상태에 따라 wiggle 또는 파티클(confetti) 이펙트를 재생하기 위함).
 - 애니메이션 DOM: `#bookmarkBar` `#bmSlot` `#fakeCursor` `#demoTextWrap` `#demoTextHl` (index.html)
 - 애니메이션 타이밍: `runAnim()` addTimer 체인 / 대기 주기 `ANIM_CYCLE=2500ms` / 안전 타이머 `ANIM_SAFETY=12000ms`
 - 커서 이동 함수: `animCursor` (직선) / `animCursorCurve(toX, toY, dur, easing, onTick, onDone)` (베지어 곡선, onTick(t)으로 clip-path 등 동기 구동 가능)
