@@ -59,7 +59,7 @@ const SLOT_EMPTY_HTML  = `<svg width="11" height="11" viewBox="0 0 24 24" fill="
 const SLOT_FILLED_HTML = `<div style="width:12px;height:12px;border-radius:3px;background:#1d1d1f;flex-shrink:0;"></div>Allow-Copy`;
 
 const ANIM_CYCLE  = 4500;
-const ANIM_SAFETY = 5500;
+const ANIM_SAFETY = 9500;
 
 let animLock    = false;
 let animTimers  = [];
@@ -96,8 +96,11 @@ function resetAnim(reschedule = true) {
 
   bmSlot.classList.remove('success');
   bmSlot.innerHTML = SLOT_EMPTY_HTML;
+  bmSlot.style.transform  = '';
+  bmSlot.style.transition = '';
 
-  pageEl.classList.remove('is-dimmed');
+  dragBtn.style.transition = '';
+  dragBtn.classList.remove('is-dimmed');
 
   const old = document.getElementById('__unlock_toast__');
   if (old) old.remove();
@@ -188,11 +191,14 @@ function runAnim() {
     dragGhost.style.transition = 'none';
     dragGhost.style.left       = ghostAtBtn.x + 'px';
     dragGhost.style.top        = ghostAtBtn.y + 'px';
-    dragGhost.style.transform  = 'scale(1.08) rotate(-3deg) translateZ(0)';
-    dragGhost.style.boxShadow  = '0 16px 40px rgba(0,0,0,0.28)';
-    dragGhost.style.opacity    = '0.7';
+    dragGhost.style.transform  = 'scale(1.04) rotate(-6deg) translateZ(0)';
+    dragGhost.style.boxShadow  = '0 12px 32px rgba(0,0,0,0.22)';
+    dragGhost.style.opacity    = '0';
     void dragGhost.offsetHeight;
-    pageEl.classList.add('is-dimmed');
+    dragBtn.style.transition = 'opacity 0.3s ease';
+    dragBtn.classList.add('is-dimmed');
+    dragGhost.style.transition = 'opacity 0.15s ease';
+    dragGhost.style.opacity    = '0.92';
   }, 550);
 
   addTimer(() => {
@@ -201,21 +207,26 @@ function runAnim() {
   }, 700);
 
   addTimer(() => {
-    fakeCursor.style.transition = 'left 0.7s cubic-bezier(0.34,1.56,0.64,1), top 0.7s cubic-bezier(0.34,1.56,0.64,1)';
+    fakeCursor.style.transition = 'left 0.75s cubic-bezier(0.25,1.3,0.4,1), top 0.75s cubic-bezier(0.25,1.3,0.4,1)';
     fakeCursor.style.left       = cursorAtSlot.x + 'px';
     fakeCursor.style.top        = cursorAtSlot.y + 'px';
 
-    dragGhost.style.transition  = 'left 0.8s cubic-bezier(0.34,1.56,0.64,1) 0.06s, top 0.8s cubic-bezier(0.34,1.56,0.64,1) 0.06s';
+    dragGhost.style.transition  = 'left 0.85s cubic-bezier(0.25,1.3,0.4,1) 0.04s, top 0.85s cubic-bezier(0.25,1.3,0.4,1) 0.04s, transform 0.85s cubic-bezier(0.25,1.3,0.4,1) 0.04s, opacity 0.15s ease';
     dragGhost.style.left        = ghostAtSlot.x + 'px';
     dragGhost.style.top         = ghostAtSlot.y + 'px';
+    dragGhost.style.transform   = 'scale(1.04) rotate(0deg) translateZ(0)';
   }, 800);
+
+  const cursorRetract = { x: cursorAtSlot.x + 20, y: cursorAtSlot.y + 40 };
 
   addTimer(() => {
     bmSlot.classList.add('success');
     bmSlot.innerHTML = SLOT_FILLED_HTML;
+    bmSlot.style.transition = 'transform 0.1s ease';
+    bmSlot.style.transform  = 'scale(1.06) translateZ(0)';
 
-    dragGhost.style.transition = 'transform 0.28s ease, opacity 0.2s ease';
-    dragGhost.style.transform  = 'scale(0.3) translateZ(0)';
+    dragGhost.style.transition = 'transform 0.24s cubic-bezier(0.34,1.56,0.64,1), opacity 0.18s ease';
+    dragGhost.style.transform  = 'scale(0.2) translateZ(0)';
     dragGhost.style.opacity    = '0';
 
     fakeCursor.style.transition = 'transform 0.08s ease';
@@ -224,26 +235,62 @@ function runAnim() {
       fakeCursor.style.transition = 'transform 0.15s cubic-bezier(0.34,1.56,0.64,1)';
       fakeCursor.style.transform  = 'scale(1) translateZ(0)';
     }, 100);
-
-    pageEl.classList.remove('is-dimmed');
-    showDemoToast();
-  }, 1700);
+  }, 1800);
 
   addTimer(() => {
-    fakeCursor.style.transition = 'opacity 0.22s ease';
+    bmSlot.style.transition = 'transform 0.18s cubic-bezier(0.34,1.56,0.64,1)';
+    bmSlot.style.transform  = 'scale(1) translateZ(0)';
+  }, 1910);
+
+  addTimer(() => {
+    fakeCursor.style.transition = 'left 0.35s cubic-bezier(0.25,1,0.5,1), top 0.35s cubic-bezier(0.25,1,0.5,1)';
+    fakeCursor.style.left       = cursorRetract.x + 'px';
+    fakeCursor.style.top        = cursorRetract.y + 'px';
+  }, 2100);
+
+  addTimer(() => {
+    fakeCursor.style.transition = 'left 0.45s cubic-bezier(0.25,1,0.5,1), top 0.45s cubic-bezier(0.25,1,0.5,1)';
+    fakeCursor.style.left       = cursorAtSlot.x + 'px';
+    fakeCursor.style.top        = cursorAtSlot.y + 'px';
+  }, 2600);
+
+  addTimer(() => {
+    fakeCursor.style.transition = 'transform 0.08s ease';
+    fakeCursor.style.transform  = 'scale(0.78) translateZ(0)';
+    bmSlot.style.transition     = 'transform 0.08s ease';
+    bmSlot.style.transform      = 'scale(0.88) translateZ(0)';
+  }, 3100);
+
+  addTimer(() => {
+    fakeCursor.style.transition = 'transform 0.15s cubic-bezier(0.34,1.56,0.64,1)';
+    fakeCursor.style.transform  = 'scale(1) translateZ(0)';
+    bmSlot.style.transition     = 'transform 0.18s cubic-bezier(0.34,1.56,0.64,1)';
+    bmSlot.style.transform      = 'scale(1) translateZ(0)';
+    showDemoToast();
+  }, 3220);
+
+  addTimer(() => {
+    fakeCursor.style.transition = 'opacity 0.3s ease';
     fakeCursor.style.opacity    = '0';
-  }, 2200);
+  }, 3600);
+
+  addTimer(() => {
+    dragBtn.style.transition = 'opacity 0.6s ease';
+    dragBtn.classList.remove('is-dimmed');
+  }, 4800);
 
   addTimer(() => {
     bmSlot.classList.remove('success');
     bmSlot.innerHTML = SLOT_EMPTY_HTML;
+    bmSlot.style.transform  = '';
+    bmSlot.style.transition = '';
     bookmarkBar.classList.remove('visible');
     dragGhost.style.transition = 'none';
     dragGhost.style.opacity    = '0';
     clearTimeout(safetyTimer);
     animLock = false;
     scheduleAnim();
-  }, 2600);
+  }, 5600);
 }
 
 dragBtn.addEventListener('dragstart', () => resetAnim());
