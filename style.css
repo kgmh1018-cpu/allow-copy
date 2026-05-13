@@ -495,3 +495,41 @@ kbd {
   border-color: rgba(40,167,69,0.35);
   background: rgba(40,167,69,0.04);
 }
+
+/* ── Demo text highlight ── */
+.demo-text-wrap {
+  position: relative;
+  margin-bottom: 28px;
+}
+.demo-text-bg {
+  display: block;
+  font-size: 13px;
+  color: #8e8e93;
+  line-height: 1.65;
+}
+#demoTextHl {
+  position: absolute;
+  inset: -3px -8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: 13px;
+  line-height: 1.65;
+  color: #fff;
+  background: #007aff;
+  border-radius: 6px;
+  clip-path: inset(0 100% 0 0 round 6px);
+  pointer-events: none;
+}
+
+/* ── Wiggle ── */
+@keyframes wiggle {
+  0%, 100% { transform: translateX(0); }
+  20%       { transform: translateX(-5px); }
+  50%       { transform: translateX(5px); }
+  75%       { transform: translateX(-3px); }
+}
+.wiggle {
+  animation: wiggle 0.35s ease-in-out;
+}

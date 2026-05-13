@@ -81,8 +81,8 @@ const pageEl      = document.querySelector('.page');
 const SLOT_EMPTY_HTML  = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Allow-Copy`;
 const SLOT_FILLED_HTML = `<div style="width:12px;height:12px;border-radius:3px;background:#1d1d1f;flex-shrink:0;"></div>Allow-Copy`;
 
-const ANIM_CYCLE  = 5000;
-const ANIM_SAFETY = 9000;
+const ANIM_CYCLE  = 2500;
+const ANIM_SAFETY = 12000;
 
 let animLock    = false;
 let animTimers  = [];
@@ -149,6 +149,27 @@ function animCursor(toX, toY, dur, easing, onDone) {
   const id = requestAnimationFrame(tick); rafIds.push(id);
 }
 
+function animCursorCurve(toX, toY, dur, easing, onTick, onDone) {
+  const fromX = parseFloat(fakeCursor.style.left) || 0;
+  const fromY = parseFloat(fakeCursor.style.top)  || 0;
+  const dx = toX - fromX, dy = toY - fromY;
+  const cp1x = fromX + dx * 0.1,  cp1y = fromY + dy * 0.02;
+  const cp2x = fromX + dx * 0.75, cp2y = fromY + dy * 0.6;
+  const start = performance.now();
+  function tick(now) {
+    const raw = Math.min((now - start) / dur, 1);
+    const t = easing(raw), mt = 1 - t;
+    const cx = mt*mt*mt*fromX + 3*mt*mt*t*cp1x + 3*mt*t*t*cp2x + t*t*t*toX;
+    const cy = mt*mt*mt*fromY + 3*mt*mt*t*cp1y + 3*mt*t*t*cp2y + t*t*t*toY;
+    fakeCursor.style.left = cx + 'px';
+    fakeCursor.style.top  = cy + 'px';
+    if (onTick) onTick(t);
+    if (raw < 1) { const id = requestAnimationFrame(tick); rafIds.push(id); }
+    else if (onDone) onDone();
+  }
+  const id = requestAnimationFrame(tick); rafIds.push(id);
+}
+
 function scheduleAnim(delay = ANIM_CYCLE) {
   clearTimeout(nextTimer);
   nextTimer = setTimeout(runAnim, delay);
@@ -184,6 +205,10 @@ function resetAnim(reschedule = true) {
 
   dragBtn.style.transition = '';
   dragBtn.classList.remove('is-dimmed');
+
+  const demoTextHl = document.getElementById('demoTextHl');
+  if (demoTextHl) demoTextHl.style.clipPath = '';
+  fakeCursor.classList.remove('wiggle');
 
   const old = document.getElementById('__unlock_toast__');
   if (old) old.remove();
@@ -232,6 +257,9 @@ function runAnim() {
   animLock = true;
   safetyTimer = setTimeout(() => resetAnim(), ANIM_SAFETY);
 
+  const demoTextHl   = document.getElementById('demoTextHl');
+  const demoTextWrap = document.getElementById('demoTextWrap');
+
   bookmarkBar.style.transition = 'none';
   bookmarkBar.style.transform  = 'translateY(0)';
   void bookmarkBar.offsetHeight;
@@ -239,38 +267,41 @@ function runAnim() {
   bookmarkBar.style.transform  = '';
   bookmarkBar.style.transition = '';
 
-  const btnRect = dragBtn.getBoundingClientRect();
-  const ghostW  = dragGhost.offsetWidth  || 120;
-  const ghostH  = dragGhost.offsetHeight || 36;
+  const btnRect  = dragBtn.getBoundingClientRect();
+  const wrapRect = demoTextWrap.getBoundingClientRect();
+  const ghostW   = dragGhost.offsetWidth  || 120;
+  const ghostH   = dragGhost.offsetHeight || 36;
 
-  const cFromX = btnRect.left  + btnRect.width  / 2 - 10;
-  const cFromY = btnRect.top   + btnRect.height / 2 - 10;
-  const cToX   = slotRect.left + slotRect.width  / 2 - 10;
-  const cToY   = slotRect.top  + slotRect.height / 2 - 10;
+  const textStartX = wrapRect.left - 10;
+  const textStartY = wrapRect.top  + wrapRect.height / 2 - 10;
+  const textEndX   = wrapRect.right - 10;
+
+  const cBtnX  = btnRect.left  + btnRect.width  / 2 - 10;
+  const cBtnY  = btnRect.top   + btnRect.height / 2 - 10;
+  const cSlotX = slotRect.left + slotRect.width  / 2 - 10;
+  const cSlotY = slotRect.top  + slotRect.height / 2 - 10;
 
   const gFromX = btnRect.left  + btnRect.width  / 2 - ghostW / 2;
   const gFromY = btnRect.top   + btnRect.height / 2 - ghostH / 2;
   const gToX   = slotRect.left + slotRect.width  / 2 - ghostW / 2;
   const gToY   = slotRect.top  + slotRect.height / 2 - ghostH / 2;
 
-  const cRetractX = cToX + 22;
-  const cRetractY = cToY + 38;
-
-  const cClickX = cToX + 3;
-  const cClickY = cToY + 5;
+  const cRetractX = cSlotX + 22;
+  const cRetractY = cSlotY + 38;
+  const cClickX   = cSlotX + 3;
+  const cClickY   = cSlotY + 5;
 
   fakeCursor.style.transition = 'none';
-  fakeCursor.style.left       = cFromX + 'px';
-  fakeCursor.style.top        = cFromY + 'px';
+  fakeCursor.style.left       = (window.innerWidth - 30) + 'px';
+  fakeCursor.style.top        = (window.innerHeight - 30) + 'px';
   fakeCursor.style.transform  = 'scale(1)';
   fakeCursor.style.opacity    = '0';
   void fakeCursor.offsetHeight;
 
   dragGhost.style.transition = 'none';
-  dragGhost.style.left       = gFromX + 'px';
-  dragGhost.style.top        = gFromY + 'px';
-  dragGhost.style.transform  = 'scale(1.02) rotate(-3deg)';
   dragGhost.style.opacity    = '0';
+
+  if (demoTextHl) demoTextHl.style.clipPath = 'inset(0 100% 0 0 round 6px)';
 
   addTimer(() => {
     fakeCursor.style.transition = 'opacity 0.3s ease';
@@ -278,9 +309,33 @@ function runAnim() {
   }, 80);
 
   addTimer(() => {
+    animCursorCurve(textStartX, textStartY, 700, easeOutQuart, null, null);
+  }, 200);
+
+  addTimer(() => {
+    animCursor(textEndX, textStartY, 380, easeOutCubic, null);
+  }, 1050);
+
+  addTimer(() => {
+    animCursor(textStartX, textStartY, 220, easeOutQuart, null);
+  }, 1440);
+
+  addTimer(() => {
+    fakeCursor.classList.add('wiggle');
+  }, 1680);
+
+  addTimer(() => {
+    fakeCursor.classList.remove('wiggle');
+  }, 2080);
+
+  addTimer(() => {
+    animCursorCurve(cBtnX, cBtnY, 700, easeOutQuart, null, null);
+  }, 2300);
+
+  addTimer(() => {
     fakeCursor.style.transition = 'transform 0.12s cubic-bezier(0.4,0,0.6,1)';
     fakeCursor.style.transform  = 'scale(0.88)';
-  }, 520);
+  }, 3080);
 
   addTimer(() => {
     fakeCursor.style.transition = 'transform 0.22s cubic-bezier(0.34,1.55,0.64,1)';
@@ -289,20 +344,23 @@ function runAnim() {
     dragBtn.style.transition = 'opacity 0.35s ease';
     dragBtn.classList.add('is-dimmed');
 
+    dragGhost.style.left      = gFromX + 'px';
+    dragGhost.style.top       = gFromY + 'px';
+    dragGhost.style.transform = 'scale(1.02) rotate(-3deg)';
     dragGhost.style.transition = 'opacity 0.22s ease, transform 0.3s cubic-bezier(0.34,1.4,0.64,1)';
-    dragGhost.style.opacity    = '1';
-    dragGhost.style.transform  = 'scale(1) rotate(0deg)';
-    dragGhost.style.boxShadow  = '0 8px 28px rgba(0,0,0,0.18)';
-  }, 660);
+    dragGhost.style.opacity   = '1';
+    dragGhost.style.transform = 'scale(1) rotate(0deg)';
+    dragGhost.style.boxShadow = '0 8px 28px rgba(0,0,0,0.18)';
+  }, 3210);
 
   addTimer(() => {
     bookmarkBar.style.transition = '';
     bookmarkBar.classList.add('visible');
-  }, 840);
+  }, 3400);
 
   addTimer(() => {
-    animDrag(cFromX, cFromY, cToX, cToY, gFromX, gFromY, gToX, gToY, 920, null);
-  }, 1080);
+    animDrag(cBtnX, cBtnY, cSlotX, cSlotY, gFromX, gFromY, gToX, gToY, 900, null);
+  }, 3620);
 
   addTimer(() => {
     bmSlot.classList.add('success');
@@ -313,48 +371,50 @@ function runAnim() {
     dragGhost.style.transition = 'opacity 0.2s ease, transform 0.2s cubic-bezier(0.4,0,1,1)';
     dragGhost.style.opacity    = '0';
     dragGhost.style.transform  = 'scale(0.7) rotate(0deg)';
-  }, 2040);
+  }, 4560);
 
   addTimer(() => {
     bmSlot.style.transition = 'transform 0.3s cubic-bezier(0.34,1.55,0.64,1)';
     bmSlot.style.transform  = 'scale(1) translateZ(0)';
-  }, 2180);
+  }, 4700);
 
-  addTimer(() => { animCursor(cRetractX, cRetractY, 520, easeInOutSine, null); }, 2380);
+  addTimer(() => { animCursor(cRetractX, cRetractY, 520, easeInOutSine, null); }, 4900);
 
-  addTimer(() => { animCursor(cClickX, cClickY, 580, easeOutCubic, null); }, 3020);
+  addTimer(() => { animCursor(cClickX, cClickY, 560, easeOutCubic, null); }, 5500);
 
   addTimer(() => {
     fakeCursor.style.transition = 'transform 0.11s cubic-bezier(0.4,0,0.6,1)';
     fakeCursor.style.transform  = 'scale(0.88)';
     bmSlot.style.transition     = 'transform 0.11s cubic-bezier(0.4,0,0.6,1)';
     bmSlot.style.transform      = 'scale(0.93) translateZ(0)';
-  }, 3700);
+  }, 6150);
 
   addTimer(() => {
     fakeCursor.style.transition = 'transform 0.22s cubic-bezier(0.34,1.55,0.64,1)';
     fakeCursor.style.transform  = 'scale(1)';
     bmSlot.style.transition     = 'transform 0.22s cubic-bezier(0.34,1.55,0.64,1)';
     bmSlot.style.transform      = 'scale(1) translateZ(0)';
-  }, 3820);
+    showDemoToast();
+  }, 6270);
 
   addTimer(() => {
-    showDemoToast();
-  }, 4050);
+    animCursorCurve(textStartX, textStartY, 620, easeOutQuart, null, null);
+  }, 6700);
+
+  addTimer(() => {
+    animCursorCurve(textEndX, textStartY, 700, easeOutCubic, (t) => {
+      if (demoTextHl) demoTextHl.style.clipPath = `inset(0 ${Math.max(0, (1 - t) * 100)}% 0 0 round 6px)`;
+    }, null);
+  }, 7450);
 
   addTimer(() => {
     fakeCursor.style.transition = 'opacity 0.4s ease';
     fakeCursor.style.opacity    = '0';
-  }, 4700);
-
-  addTimer(() => {
-    dragBtn.style.transition = 'opacity 0.55s ease';
-    dragBtn.classList.remove('is-dimmed');
-  }, 5800);
+  }, 8500);
 
   addTimer(() => {
     bookmarkBar.classList.remove('visible');
-  }, 6600);
+  }, 9200);
 
   addTimer(() => {
     bmSlot.classList.remove('success');
@@ -363,10 +423,12 @@ function runAnim() {
     bmSlot.style.transition = '';
     dragGhost.style.transition = 'none';
     dragGhost.style.opacity    = '0';
+    dragBtn.style.transition = 'opacity 0.55s ease';
+    dragBtn.classList.remove('is-dimmed');
     clearTimeout(safetyTimer);
     animLock = false;
     scheduleAnim();
-  }, 7000);
+  }, 9500);
 }
 
 dragBtn.addEventListener('dragstart', () => resetAnim());
