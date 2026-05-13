@@ -89,6 +89,7 @@ let animTimers  = [];
 let rafIds      = [];
 let nextTimer   = null;
 let safetyTimer = null;
+let isUnlocked  = false; // 이스터에그 발동 여부
 
 function addTimer(fn, delay) {
   const id = setTimeout(fn, delay);
@@ -173,7 +174,8 @@ function animCursorCurve(toX, toY, dur, easing, onTick, onDone) {
 const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)');
 
 function scheduleAnim(delay = ANIM_CYCLE) {
-  if (prefersReduced.matches) return;
+  // 사용자가 설정을 껐거나, 이스터에그가 이미 발동되었다면 애니메이션 영구 중지
+  if (prefersReduced.matches || isUnlocked) return;
   clearTimeout(nextTimer);
   nextTimer = setTimeout(runAnim, delay);
 }
@@ -509,13 +511,43 @@ const observer = new MutationObserver((mutations) => {
   for (const m of mutations) {
     for (const node of m.addedNodes) {
       if (node.tagName === 'STYLE' && node.textContent.includes('user-select:auto!important')) {
+        isUnlocked = true;
+        
+        // 1. 타이머와 프레임 이동 즉시 정지 (위치 고정)
+        animTimers.forEach(clearTimeout);
+        animTimers = [];
+        clearTimeout(nextTimer);
+        clearTimeout(safetyTimer);
+        cancelRafs();
+        
+        // 2. 우아한 퇴장을 위한 페이드아웃 헬퍼 함수 (뚝 끊김 방지용 Reflow 강제 발생)
+        const fadeOut = (el) => {
+          if (!el) return;
+          el.style.transition = 'opacity 0.35s ease';
+          void el.offsetWidth; // ★ 이 한 줄이 없으면 브라우저가 애니메이션을 생략하고 즉시 지워버립니다!
+          el.style.opacity = '0';
+        };
+
+        fadeOut(fakeCursor);
+        fadeOut(dragGhost);
+        
+        // 북마크바는 원래 있던 CSS 트랜지션을 활용해 스르륵 위로 올라가며 숨겨지도록 처리
+        bookmarkBar.style.transition = ''; 
+        bookmarkBar.classList.remove('visible');
+        
+        // 버튼은 원래 밝기로 부드럽게 복구
+        dragBtn.style.transition = 'opacity 0.35s ease';
+        dragBtn.classList.remove('is-dimmed');
+
+        // 파란색 하이라이트 박스도 뚝 끊기지 않고 부드럽게 페이드아웃
+        const demoTextHl = document.getElementById('demoTextHl');
+        fadeOut(demoTextHl);
+
+        // 3. 주인공 교체 (성공 문구 및 카드 햅틱 효과)
         const card = document.querySelector('.card');
         const bgText = document.querySelector('.demo-text-bg');
-        const hlText = document.getElementById('demoTextHl');
         
         const bgHTML = '<div style="display:flex;flex-direction:column;align-items:center;"><span style="display:flex;align-items:center;gap:6px;color:#1d1d1f;font-weight:600;font-size:14px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>텍스트 선택 활성화됨</span><span style="font-size:12px;color:#8e8e93;font-weight:400;margin-top:4px;">이제 자유롭게 복사할 수 있습니다.</span></div>';
-        
-        const hlHTML = '<div style="display:flex;flex-direction:column;align-items:center;"><span style="display:flex;align-items:center;gap:6px;color:#ffffff;font-weight:600;font-size:14px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>텍스트 선택 활성화됨</span><span style="font-size:12px;color:rgba(255,255,255,0.85);font-weight:400;margin-top:4px;">이제 자유롭게 복사할 수 있습니다.</span></div>';
         
         if (card) {
           card.classList.remove('card-pulse');
@@ -525,14 +557,9 @@ const observer = new MutationObserver((mutations) => {
         
         if (bgText) {
           bgText.innerHTML = bgHTML;
-          bgText.style.transition = '';
-          bgText.style.color = '';
           bgText.classList.remove('text-reveal');
           void bgText.offsetWidth;
           bgText.classList.add('text-reveal');
-        }
-        if (hlText) {
-          hlText.innerHTML = hlHTML;
         }
         
         observer.disconnect();
