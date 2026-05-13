@@ -459,6 +459,46 @@ let isDraggingBtn = false;
 dragBtn.addEventListener('mousedown', () => dragBtn.classList.add('is-pressed'));
 window.addEventListener('mouseup', () => dragBtn.classList.remove('is-pressed'));
 
+// 즐거운 미니 폭죽 파티클 생성기
+function createConfetti(el) {
+  const container = document.createElement('div');
+  container.classList.add('confetti-container');
+  el.appendChild(container);
+
+  const colors = ['#32D74B', '#FFD60A', '#0A84FF', '#BF5AF2', '#FF453A'];
+  for (let i = 0; i < 8; i++) {
+    const confetti = document.createElement('div');
+    confetti.classList.add('confetti');
+    
+    // 버튼 테두리 방향으로 랜덤하게 발사 좌표 계산 (반지름 약 15~30px)
+    const angle = Math.random() * Math.PI * 2;
+    const dist = 15 + Math.random() * 15;
+    confetti.style.setProperty('--x', `${Math.cos(angle) * dist}px`);
+    confetti.style.setProperty('--y', `${Math.sin(angle) * dist}px`);
+    confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+    
+    container.appendChild(confetti);
+  }
+  
+  // 애니메이션 종료 후 요소 제거
+  setTimeout(() => container.remove(), 550);
+}
+
+// 1.5. 클릭 시 북마크릿 실행 방지 및 축하 이펙트 분기 처리
+dragBtn.addEventListener('click', (e) => {
+  e.preventDefault(); // 어떤 상태든 클릭 시 href 자바스크립트 실행은 방지
+  
+  if (dragBtn.classList.contains('unlocked')) {
+    // [이벤트 해제 후] 즐거운 폭죽 이펙트 무한 반복
+    createConfetti(dragBtn);
+  } else {
+    // [이벤트 해제 전] 도리도리 애니메이션만 실행
+    dragBtn.classList.remove('wiggle');
+    void dragBtn.offsetWidth;
+    dragBtn.classList.add('wiggle');
+  }
+});
+
 // 2. 드래그 시작 (★ 북마크릿의 차단보다 우선 실행되도록 true 옵션 사용)
 document.addEventListener('dragstart', (e) => {
   const btn = e.target.closest('.drag-btn');
@@ -535,9 +575,11 @@ const observer = new MutationObserver((mutations) => {
         bookmarkBar.style.transition = ''; 
         bookmarkBar.classList.remove('visible');
         
-        // 버튼은 원래 밝기로 부드럽게 복구
+        // 버튼은 원래 밝기로 부드럽게 복구하고 세련되게 진화
         dragBtn.style.transition = 'opacity 0.35s ease';
         dragBtn.classList.remove('is-dimmed');
+        dragBtn.classList.add('unlocked'); // 진화된 스타일 적용 (검은색 배경)
+     
 
         // 파란색 하이라이트 박스도 뚝 끊기지 않고 부드럽게 페이드아웃
         const demoTextHl = document.getElementById('demoTextHl');
