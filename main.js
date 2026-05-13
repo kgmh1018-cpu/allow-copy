@@ -26,17 +26,18 @@ closeBtn.addEventListener('click',   () => overlay.classList.remove('open'));
 overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
 
 // ── Mobile hint ──
-const mobileHint = document.getElementById('mobileHint');
+const iosHint     = document.getElementById('iosHint');
+const androidHint = document.getElementById('androidHint');
 const ua = navigator.userAgent;
 const isIOS     = /iPhone|iPad|iPod/i.test(ua);
 const isAndroid = /Android/i.test(ua);
 
-if (isIOS || isAndroid) {
-  mobileHint.classList.add('visible');
-  mobileHint.addEventListener('click', (e) => {
-    e.preventDefault();
-    openModal(isIOS ? 'faq3' : 'faq4');
-  });
+if (isIOS) {
+  iosHint.classList.add('visible');
+  iosHint.addEventListener('click', () => openModal('faq3'));
+} else if (isAndroid) {
+  androidHint.classList.add('visible');
+  androidHint.addEventListener('click', () => openModal('faq4'));
 }
 
 // ── FAQ ──
