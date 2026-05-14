@@ -352,31 +352,26 @@ function runAnim() {
     fakeCursor.style.transform  = 'scale(1)'; // 끝까지 갔는데 안 돼서 당황하며 마우스 뗌
   }, 1530);
 
-  // 2. 분노의 더블클릭 (Aggressive Double Click) - 다시 맨 앞으로 확 돌아가서 강제 선택 시도
-  addTimer(() => {
+addTimer(() => {
     animCursor(textStartX + 5, textStartY, 220, easeOutQuart, null);
   }, 1650);
-  addTimer(() => { fakeCursor.style.transform = 'scale(0.85)'; }, 1870);
-  addTimer(() => { fakeCursor.style.transform = 'scale(1)'; }, 1940);
-  addTimer(() => { fakeCursor.style.transform = 'scale(0.85)'; }, 2010);
-  addTimer(() => { fakeCursor.style.transform = 'scale(1)'; }, 2080);
 
-  // 3. 신경질적인 마우스 흔들기 (Frustrated Jiggle)
   addTimer(() => {
     fakeCursor.classList.add('is-frustrated');
-  }, 2150);
+  }, 1900);
+  
   addTimer(() => {
     fakeCursor.classList.remove('is-frustrated');
-  }, 2500);
+  }, 2250);
 
   addTimer(() => {
     animCursorCurve(cBtnX, cBtnY, 700, easeOutQuart, null, null);
-  }, 2500);
+  }, 2250);
 
   addTimer(() => {
     fakeCursor.style.transition = 'transform 0.12s cubic-bezier(0.4,0,0.6,1)';
     fakeCursor.style.transform  = 'scale(0.88)';
-  }, 3200);
+  }, 2950);
 
   addTimer(() => {
     fakeCursor.style.transition = 'transform 0.22s cubic-bezier(0.34,1.55,0.64,1)';
@@ -395,16 +390,16 @@ function runAnim() {
     dragGhost.style.transition = 'opacity 0.15s ease-out, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)';
     dragGhost.style.opacity   = '1';
     dragGhost.style.transform = 'scale(1.04) rotate(0deg)';
-  }, 3330);
+  }, 3080);
 
   addTimer(() => {
     bookmarkBar.style.transition = '';
     bookmarkBar.classList.add('visible');
-  }, 3520);
+  }, 3270);
 
   addTimer(() => {
     animDrag(cBtnX, cBtnY, cSlotX, cSlotY, gFromX, gFromY, gToX, gToY, 900, null);
-  }, 3740);
+  }, 3490);
 
   addTimer(() => {
     bmGap.innerHTML = '<div class="bm-drop-indicator"></div>';
@@ -413,7 +408,7 @@ function runAnim() {
       const ind = bmGap.querySelector('.bm-drop-indicator');
       if (ind) ind.classList.add('is-visible');
     });
-  }, 4200);
+  }, 3950);
 
   addTimer(() => {
     bmGap.classList.add('is-filled');
@@ -432,18 +427,18 @@ function runAnim() {
     dragGhost.style.transition = 'transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.2s ease-out';
     dragGhost.style.transform  = 'scale(0.85) translateY(2px) rotate(0deg)';
     dragGhost.style.opacity    = '0';
-  }, 4680);
+  }, 4430);
 
-  addTimer(() => { animCursor(cRetractX, cRetractY, 520, easeInOutSine, null); }, 5020);
+  addTimer(() => { animCursor(cRetractX, cRetractY, 380, easeInOutSine, null); }, 4770);
 
-  addTimer(() => { animCursor(cClickX, cClickY, 560, easeOutCubic, null); }, 5700);
+  addTimer(() => { animCursor(cClickX, cClickY, 480, easeOutCubic, null); }, 5270);
 
   addTimer(() => {
     fakeCursor.style.transition = 'transform 0.11s cubic-bezier(0.4,0,0.6,1)';
     fakeCursor.style.transform  = 'scale(0.88)';
     const filled = document.getElementById('bmFilled');
     if (filled) filled.classList.add('is-clicking');
-  }, 6350);
+  }, 5920);
 
   addTimer(() => {
     fakeCursor.style.transition = 'transform 0.22s cubic-bezier(0.34,1.55,0.64,1)';
@@ -451,21 +446,20 @@ function runAnim() {
     const filled = document.getElementById('bmFilled');
     if (filled) filled.classList.remove('is-clicking');
     addTimer(showDemoToast, 150);
-  }, 6470);
+  }, 6040);
 
   addTimer(() => {
     animCursorCurve(ibeamStartX, ibeamStartY, 620, easeOutQuart, null, null);
-  }, 7020);
+  }, 6590);
 
-  // --- 프리미엄 피날레: 확신에 찬 스윕과 감상(Admire) ---
   addTimer(() => {
-    fakeCursor.classList.add('is-text'); // I-beam으로 전환
-  }, 7520); 
+    fakeCursor.classList.add('is-text');
+  }, 7090); 
 
   addTimer(() => {
     fakeCursor.style.transition = 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1)';
-    fakeCursor.style.transform  = 'scale(0.85)'; // 부드럽고 확신에 찬 꾹 누름
-  }, 7620);
+    fakeCursor.style.transform  = 'scale(0.85)';
+  }, 7190);
 
   addTimer(() => {
     animCursorCurve(ibeamEndX, ibeamEndY, 1100, easeOutExpo, (t) => {
@@ -474,34 +468,29 @@ function runAnim() {
         demoTextHl.style.clipPath = `inset(0 ${100 - prog * 100}% 0 0)`;
       }
     }, null);
-  }, 7820);
+  }, 7390);
 
   addTimer(() => {
-    fakeCursor.style.transform  = 'scale(1)'; // 드래그 끝. 마우스 버튼 뗌
-  }, 8920);
-
-  // 텍스트 끝 지점(textEndX, textEndY)에서 약 300ms 동안 가만히 머무름
-  // 유저가 하이라이트된 텍스트를 정확히 '확인'하는 시선 체류 시간 확보
+    fakeCursor.style.transform  = 'scale(1)';
+  }, 8490);
 
   addTimer(() => {
-    fakeCursor.classList.remove('is-text'); // 다시 화살표로 복귀
-  }, 9220);
+    fakeCursor.classList.remove('is-text');
+  }, 8790);
 
   addTimer(() => {
-    // 감상 후, 마우스를 화면 바깥(우측 하단)으로 휙 던지는 자연스러운 퇴장 (가속 곡선 easeInCubic 사용)
     animCursor(ibeamEndX + 90, ibeamEndY + 70, 550, easeInCubic, null);
-  }, 9270);
+  }, 8840);
 
   addTimer(() => {
-    // 휙 빠지는 도중에 Z축으로 멀어지듯 스케일 다운 + 페이드 아웃 (가장 고급스러운 소멸 방식)
     fakeCursor.style.transition = 'opacity 0.35s ease, transform 0.35s ease';
     fakeCursor.style.opacity    = '0'; 
     fakeCursor.style.transform  = 'scale(0.8)';
-  }, 9470);
+  }, 9040);
 
   addTimer(() => {
     bookmarkBar.classList.remove('visible');
-  }, 9820);
+  }, 9390);
 
   addTimer(() => {
     bmGap.classList.remove('is-open', 'is-filled');
@@ -513,7 +502,7 @@ function runAnim() {
     clearTimeout(safetyTimer);
     animLock = false;
     scheduleAnim();
-  }, 10620);
+  }, 10190);
 }
 
 installBtn.addEventListener('click', () => resetAnim(false));
