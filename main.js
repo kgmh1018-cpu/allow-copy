@@ -291,6 +291,12 @@ function runAnim() {
   const textEndX   = lastLine.right + paddingX - 10;
   const textEndY   = lastLine.top + (lastLine.height / 2) - 10;
 
+  const ibeamStartX = firstLine.left - 13;
+  const ibeamStartY = firstLine.top + firstLine.height * 0.42 - 10;
+
+  const ibeamEndX = lastLine.right + paddingX - 10;
+  const ibeamEndY = lastLine.top + lastLine.height * 0.42 - 10;
+
   const cBtnX  = btnRect.left  + btnRect.width  / 2 - 10 + 6;
   const cBtnY  = btnRect.top   + btnRect.height / 2 - 10 + 4;
   const cSlotX = slotRect.left + slotRect.width  / 2 - 10 + 5;
@@ -324,7 +330,7 @@ function runAnim() {
   }, 80);
 
   addTimer(() => {
-    animCursorCurve(textStartX, textStartY, 700, easeOutQuart, null, null);
+    animCursorCurve(textStartX, textStartY - 4, 700, easeOutQuart, null, null);
   }, 200);
 
   // 1. 전체 텍스트 긁기 (The Full Slip) - 끝까지 드래그해보지만 하이라이트가 안 생김
@@ -334,7 +340,7 @@ function runAnim() {
   }, 930);
   addTimer(() => {
     // 실제 사람이 하듯 전체 텍스트를 끝까지 빠르게 훑음
-    animCursorCurve(textEndX, textEndY, 550, easeOutCubic, null, null);
+    animCursorCurve(textEndX + 8, textEndY + 5, 550, easeOutCubic, null, null);
   }, 980);
   addTimer(() => {
     fakeCursor.style.transform  = 'scale(1)'; // 끝까지 갔는데 안 돼서 당황하며 마우스 뗌
@@ -431,7 +437,7 @@ function runAnim() {
   }, 6470);
 
   addTimer(() => {
-    animCursorCurve(textStartX, textStartY, 620, easeOutQuart, null, null);
+    animCursorCurve(ibeamStartX, ibeamStartY, 620, easeOutQuart, null, null);
   }, 6900);
 
   // --- 프리미엄 피날레: 확신에 찬 스윕과 감상(Admire) ---
@@ -445,7 +451,7 @@ function runAnim() {
   }, 7500);
 
   addTimer(() => {
-    animCursorCurve(textEndX, textEndY, 1100, easeOutExpo, (t) => {
+    animCursorCurve(ibeamEndX, ibeamEndY, 1100, easeOutExpo, (t) => {
       if (demoTextHl) {
         const prog = Math.max(0, Math.min(1, t));
         demoTextHl.style.clipPath = `inset(0 ${100 - prog * 100}% 0 0)`;
@@ -466,7 +472,7 @@ function runAnim() {
 
   addTimer(() => {
     // 감상 후, 마우스를 화면 바깥(우측 하단)으로 휙 던지는 자연스러운 퇴장 (가속 곡선 easeInCubic 사용)
-    animCursor(textEndX + 90, textEndY + 70, 550, easeInCubic, null);
+    animCursor(ibeamEndX + 90, ibeamEndY + 70, 550, easeInCubic, null);
   }, 9150);
 
   addTimer(() => {
@@ -670,7 +676,6 @@ const observer = new MutationObserver((mutations) => {
           bgText.classList.add('text-reveal');
         }
         
-        observer.disconnect();
       }
     }
   }
