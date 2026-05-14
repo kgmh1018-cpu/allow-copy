@@ -51,53 +51,59 @@ body {
   color: #3c3c3c;
   white-space: nowrap;
 }
-.bm-slot {
+.bm-gap {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 5px;
-  padding: 3px 0;
-  max-width: 0;
-  opacity: 0;
+  justify-content: center;
+  width: 0;
   overflow: hidden;
+  will-change: width;
+  transition: width 0.22s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.bm-gap.is-open {
+  width: 110px;
+}
+.bm-gap-filled {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
   border-radius: 5px;
   font-size: 12px;
+  font-weight: 400;
+  color: #1d1d1f;
   white-space: nowrap;
-  will-change: max-width, padding, opacity, transform;
-  /* Apple Expo-Out 곡선 적용: 초반에 확 열리고 끝에서 스르륵 정렬됨 */
-  transition: max-width 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-              padding 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-              opacity 0.3s ease-out,
-              transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), 
-              background 0.3s ease, box-shadow 0.3s ease;
+  opacity: 0;
+  transform-origin: center;
+  transition: opacity 0.2s ease, background 0.09s ease, transform 0.12s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
-.bm-slot.is-expanded {
-  max-width: 110px;
-  padding: 3px 9px;
+.bm-gap-filled.is-visible {
   opacity: 1;
 }
-.bm-slot.success {
-  background: rgba(0,0,0,0.05);
-  color: #1d1d1f;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+.bm-gap-filled.is-clicking {
+  background: rgba(0, 0, 0, 0.08);
+  transform: scale(0.91);
 }
 .bm-drop-indicator {
   position: absolute;
-  left: 0;
+  left: 50%;
   top: 50%;
-  width: 2px;
-  height: 18px;
-  background: #007aff;
+  width: 1.5px;
+  height: 14px;
+  background: rgba(0,0,0,0.28);
   border-radius: 1px;
-  transform: translateY(-50%) scaleY(0.4);
+  transform: translate(-50%, -50%) scaleY(0);
   opacity: 0;
-  animation: indicatorPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s forwards;
+  transition: opacity 0.14s ease, transform 0.2s cubic-bezier(0.25, 1, 0.5, 1);
 }
-@keyframes indicatorPop {
-  to {
-    transform: translateY(-50%) scaleY(1);
-    opacity: 1;
-  }
+.bm-drop-indicator.is-visible {
+  opacity: 1;
+  transform: translate(-50%, -50%) scaleY(1);
+}
+.bm-gap.is-filled .bm-drop-indicator {
+  opacity: 0;
+  transform: translate(-50%, -50%) scaleY(0);
 }
 .bm-sep {
   width: 0.5px;

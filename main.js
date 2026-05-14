@@ -70,13 +70,12 @@ setupCopyBtn('copyBtnAndroid', BOOKMARKLET_CODE_ANDROID);
 // ── Drag demo animation ──
 const fakeCursor  = document.getElementById('fakeCursor');
 const bookmarkBar = document.getElementById('bookmarkBar');
-const bmSlot      = document.getElementById('bmSlot');
+const bmGap       = document.getElementById('bmGap');
 const dragBtn     = document.getElementById('bookmarklet-link');
 const dragGhost   = document.getElementById('drag-ghost');
 const pageEl      = document.querySelector('.page');
 
-const SLOT_EMPTY_HTML  = `<div style="display:flex;align-items:center;gap:5px;opacity:0;"><div style="width:14px;height:14px;flex-shrink:0;"></div><span style="font-size:12px;">Allow-Copy</span></div>`;
-const SLOT_FILLED_HTML = `<div style="width:14px;height:14px;border-radius:3px;background:#1d1d1f;flex-shrink:0;"></div><span style="font-size:12px;font-weight:400;color:#1d1d1f;">Allow-Copy</span>`;
+const GAP_FILLED_HTML = `<div class="bm-gap-filled" id="bmFilled"><div style="width:14px;height:14px;border-radius:3px;background:#1d1d1f;flex-shrink:0;"></div><span>Allow-Copy</span></div>`;
 
 const ANIM_CYCLE  = 2500;
 const ANIM_SAFETY = 12000;
@@ -205,10 +204,9 @@ function resetAnim(reschedule = true) {
   bookmarkBar.style.transition = 'none';
   bookmarkBar.classList.remove('visible');
 
-  bmSlot.classList.remove('success', 'is-expanded');
-  bmSlot.innerHTML = SLOT_EMPTY_HTML;
-  bmSlot.style.transform  = '';
-  bmSlot.style.transition = '';
+  bmGap.classList.remove('is-open', 'is-filled');
+  bmGap.innerHTML = '';
+  bmGap.style.transition = '';
 
   dragBtn.style.transition = '';
   dragBtn.classList.remove('is-dimmed', 'wiggle', 'is-pressed');
@@ -270,15 +268,14 @@ function runAnim() {
   bookmarkBar.style.transition = 'none';
   bookmarkBar.style.transform  = 'translateY(0)';
   
-  /* 강건성 패치: 측정하는 순간에는 슬롯의 트랜지션을 꺼서 최종 110px 너비를 즉시 받아냅니다. */
-  bmSlot.style.transition = 'none'; 
-  bmSlot.classList.add('is-expanded');
-  void bookmarkBar.offsetHeight; 
+  bmGap.style.transition = 'none';
+  bmGap.classList.add('is-open');
+  void bookmarkBar.offsetHeight;
   
-  const slotRect = bmSlot.getBoundingClientRect();
+  const gapRect = bmGap.getBoundingClientRect();
   
-  bmSlot.classList.remove('is-expanded');
-  bmSlot.style.transition = ''; /* 트랜지션 원상복구 */
+  bmGap.classList.remove('is-open');
+  bmGap.style.transition = '';
   
   bookmarkBar.style.transform  = '';
   bookmarkBar.style.transition = '';
@@ -308,13 +305,13 @@ function runAnim() {
 
   const cBtnX  = btnRect.left  + btnRect.width  / 2 - 10 + 6;
   const cBtnY  = btnRect.top   + btnRect.height / 2 - 10 + 4;
-  const cSlotX = slotRect.left + slotRect.width  / 2 - 10 + 5;
-  const cSlotY = slotRect.top  + slotRect.height / 2 - 10 - 3;
+  const cSlotX = gapRect.left + gapRect.width  / 2 - 10 + 5;
+  const cSlotY = gapRect.top  + gapRect.height / 2 - 10 - 3;
 
   const gFromX = btnRect.left  + btnRect.width  / 2 - ghostW / 2;
   const gFromY = btnRect.top   + btnRect.height / 2 - ghostH / 2;
-  const gToX   = slotRect.left + slotRect.width  / 2 - ghostW / 2;
-  const gToY   = slotRect.top  + slotRect.height / 2 - ghostH / 2;
+  const gToX   = gapRect.left + gapRect.width  / 2 - ghostW / 2;
+  const gToY   = gapRect.top  + gapRect.height / 2 - ghostH / 2;
 
   const cRetractX = cSlotX + 22;
   const cRetractY = cSlotY + 38;
@@ -410,27 +407,26 @@ function runAnim() {
   }, 3740);
 
   addTimer(() => {
-    bmSlot.classList.add('is-expanded');
+    bmGap.innerHTML = '<div class="bm-drop-indicator"></div>';
+    bmGap.classList.add('is-open');
+    requestAnimationFrame(() => {
+      const ind = bmGap.querySelector('.bm-drop-indicator');
+      if (ind) ind.classList.add('is-visible');
+    });
   }, 4200);
 
   addTimer(() => {
-    bmSlot.classList.add('success');
-    bmSlot.innerHTML = SLOT_FILLED_HTML;
-    /* Mac-style Drop: 아이템이 부드럽게 안착하며 슬롯이 살짝 팝 아웃됨 */
-    bmSlot.style.transition = 'transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)';
-    bmSlot.style.transform  = 'scale(1.04)';
+    bmGap.classList.add('is-filled');
+    bmGap.innerHTML = GAP_FILLED_HTML;
+    requestAnimationFrame(() => {
+      const filled = document.getElementById('bmFilled');
+      if (filled) filled.classList.add('is-visible');
+    });
 
-    /* 잔상(Ghost)은 우아하게 축소되며 정위치에 스냅 */
     dragGhost.style.transition = 'opacity 0.15s ease-out, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)';
     dragGhost.style.opacity    = '0';
     dragGhost.style.transform  = 'scale(0.92) translateY(1px) rotate(0deg)';
   }, 4680);
-
-  addTimer(() => {
-    /* 슬롯 스프링 복구 */
-    bmSlot.style.transition = 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)';
-    bmSlot.style.transform  = 'scale(1) translateZ(0)';
-  }, 4880);
 
   addTimer(() => { animCursor(cRetractX, cRetractY, 520, easeInOutSine, null); }, 5020);
 
@@ -439,31 +435,31 @@ function runAnim() {
   addTimer(() => {
     fakeCursor.style.transition = 'transform 0.11s cubic-bezier(0.4,0,0.6,1)';
     fakeCursor.style.transform  = 'scale(0.88)';
-    bmSlot.style.transition     = 'transform 0.11s cubic-bezier(0.4,0,0.6,1)';
-    bmSlot.style.transform      = 'scale(0.93) translateZ(0)';
+    const filled = document.getElementById('bmFilled');
+    if (filled) filled.classList.add('is-clicking');
   }, 6350);
 
   addTimer(() => {
     fakeCursor.style.transition = 'transform 0.22s cubic-bezier(0.34,1.55,0.64,1)';
     fakeCursor.style.transform  = 'scale(1)';
-    bmSlot.style.transition     = 'transform 0.22s cubic-bezier(0.34,1.55,0.64,1)';
-    bmSlot.style.transform      = 'scale(1) translateZ(0)';
-    showDemoToast();
+    const filled = document.getElementById('bmFilled');
+    if (filled) filled.classList.remove('is-clicking');
+    addTimer(showDemoToast, 150);
   }, 6470);
 
   addTimer(() => {
     animCursorCurve(ibeamStartX, ibeamStartY, 620, easeOutQuart, null, null);
-  }, 6900);
+  }, 7020);
 
   // --- 프리미엄 피날레: 확신에 찬 스윕과 감상(Admire) ---
   addTimer(() => {
     fakeCursor.classList.add('is-text'); // I-beam으로 전환
-  }, 7400); 
+  }, 7520); 
 
   addTimer(() => {
     fakeCursor.style.transition = 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1)';
     fakeCursor.style.transform  = 'scale(0.85)'; // 부드럽고 확신에 찬 꾹 누름
-  }, 7500);
+  }, 7620);
 
   addTimer(() => {
     animCursorCurve(ibeamEndX, ibeamEndY, 1100, easeOutExpo, (t) => {
@@ -472,40 +468,38 @@ function runAnim() {
         demoTextHl.style.clipPath = `inset(0 ${100 - prog * 100}% 0 0)`;
       }
     }, null);
-  }, 7700);
+  }, 7820);
 
   addTimer(() => {
     fakeCursor.style.transform  = 'scale(1)'; // 드래그 끝. 마우스 버튼 뗌
-  }, 8800);
+  }, 8920);
 
   // 텍스트 끝 지점(textEndX, textEndY)에서 약 300ms 동안 가만히 머무름
   // 유저가 하이라이트된 텍스트를 정확히 '확인'하는 시선 체류 시간 확보
 
   addTimer(() => {
     fakeCursor.classList.remove('is-text'); // 다시 화살표로 복귀
-  }, 9100);
+  }, 9220);
 
   addTimer(() => {
     // 감상 후, 마우스를 화면 바깥(우측 하단)으로 휙 던지는 자연스러운 퇴장 (가속 곡선 easeInCubic 사용)
     animCursor(ibeamEndX + 90, ibeamEndY + 70, 550, easeInCubic, null);
-  }, 9150);
+  }, 9270);
 
   addTimer(() => {
     // 휙 빠지는 도중에 Z축으로 멀어지듯 스케일 다운 + 페이드 아웃 (가장 고급스러운 소멸 방식)
     fakeCursor.style.transition = 'opacity 0.35s ease, transform 0.35s ease';
     fakeCursor.style.opacity    = '0'; 
     fakeCursor.style.transform  = 'scale(0.8)';
-  }, 9350);
+  }, 9470);
 
   addTimer(() => {
     bookmarkBar.classList.remove('visible');
-  }, 9700);
+  }, 9820);
 
   addTimer(() => {
-    bmSlot.classList.remove('success');
-    bmSlot.innerHTML = SLOT_EMPTY_HTML;
-    bmSlot.style.transform  = '';
-    bmSlot.style.transition = '';
+    bmGap.classList.remove('is-open', 'is-filled');
+    bmGap.innerHTML = '';
     dragGhost.style.transition = 'none';
     dragGhost.style.opacity    = '0';
     dragBtn.style.transition = 'opacity 0.55s ease';
@@ -513,7 +507,7 @@ function runAnim() {
     clearTimeout(safetyTimer);
     animLock = false;
     scheduleAnim();
-  }, 10500);
+  }, 10620);
 }
 
 installBtn.addEventListener('click', () => resetAnim(false));
