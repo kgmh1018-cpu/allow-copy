@@ -97,6 +97,10 @@ function addTimer(fn, delay) {
 function easeOutQuart(t)   { return 1 - Math.pow(1 - t, 4); }
 function easeOutCubic(t)   { return 1 - Math.pow(1 - t, 3); }
 function easeInOutSine(t)  { return -(Math.cos(Math.PI * t) - 1) / 2; }
+function easeHumanDrag(t)  { return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; }
+function easeOutBack(t)    { const c1 = 1.70158; return 1 + (c1 + 1) * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); }
+function easeOutBackSoft(t){ const c1 = 0.6; return 1 + (c1 + 1) * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); }
+function easeInCubic(t)    { return t * t * t; }
 
 function cancelRafs() {
   rafIds.forEach(cancelAnimationFrame);
@@ -270,13 +274,20 @@ function runAnim() {
   bookmarkBar.style.transition = '';
 
   const btnRect  = dragBtn.getBoundingClientRect();
-  const wrapRect = demoTextWrap.getBoundingClientRect();
   const ghostW   = dragGhost.offsetWidth  || 120;
   const ghostH   = dragGhost.offsetHeight || 36;
 
-  const textStartX = wrapRect.left - 10;
-  const textStartY = wrapRect.top  + wrapRect.height / 2 - 10;
-  const textEndX   = wrapRect.right - 10;
+  // 텍스트 라인별 실제 렌더링 좌표 정밀 계산 (프리미엄 디테일)
+  const textInlineEl = document.querySelector('#demoTextHl span');
+  const textRects = textInlineEl.getClientRects(); 
+  const firstLine = textRects[0];
+  const lastLine = textRects[textRects.length - 1];
+
+  const textStartX = firstLine.left - 6 - 10;
+  const textStartY = firstLine.top + (firstLine.height / 2) - 10;
+  
+  const textEndX   = lastLine.right + 12 - 10;
+  const textEndY   = lastLine.bottom - (lastLine.height * 0.2) - 10;
 
   const cBtnX  = btnRect.left  + btnRect.width  / 2 - 10 + 6;
   const cBtnY  = btnRect.top   + btnRect.height / 2 - 10 + 4;
@@ -303,7 +314,7 @@ function runAnim() {
   dragGhost.style.transition = 'none';
   dragGhost.style.opacity    = '0';
 
-  if (demoTextHl) demoTextHl.style.clipPath = 'inset(0 100% 0 0 round 6px)';
+  if (demoTextHl) demoTextHl.style.clipPath = 'inset(0 100% 0 0)';
 
   addTimer(() => {
     fakeCursor.style.transition = 'opacity 0.3s ease';
@@ -314,29 +325,35 @@ function runAnim() {
     animCursorCurve(textStartX, textStartY, 700, easeOutQuart, null, null);
   }, 200);
 
+  // 1. 전체 텍스트 긁기 (The Full Slip) - 끝까지 드래그해보지만 하이라이트가 안 생김
   addTimer(() => {
-    fakeCursor.classList.add('is-forbidden');
-  }, 950);
+    fakeCursor.style.transition = 'transform 0.1s cubic-bezier(0.4, 0, 0.2, 1)';
+    fakeCursor.style.transform  = 'scale(0.85)'; // 꾹 누름
+  }, 930);
+  addTimer(() => {
+    // 실제 사람이 하듯 전체 텍스트를 끝까지 빠르게 훑음
+    animCursorCurve(textEndX, textEndY, 550, easeOutCubic, null, null);
+  }, 980);
+  addTimer(() => {
+    fakeCursor.style.transform  = 'scale(1)'; // 끝까지 갔는데 안 돼서 당황하며 마우스 뗌
+  }, 1530);
 
+  // 2. 분노의 더블클릭 (Aggressive Double Click) - 다시 맨 앞으로 확 돌아가서 강제 선택 시도
   addTimer(() => {
-    animCursor(textStartX + 15, textStartY, 150, easeOutCubic, null);
-  }, 1150);
+    animCursor(textStartX + 5, textStartY, 220, easeOutQuart, null);
+  }, 1650);
+  addTimer(() => { fakeCursor.style.transform = 'scale(0.85)'; }, 1870);
+  addTimer(() => { fakeCursor.style.transform = 'scale(1)'; }, 1940);
+  addTimer(() => { fakeCursor.style.transform = 'scale(0.85)'; }, 2010);
+  addTimer(() => { fakeCursor.style.transform = 'scale(1)'; }, 2080);
 
+  // 3. 신경질적인 마우스 흔들기 (Frustrated Jiggle)
   addTimer(() => {
-    animCursor(textStartX - 5, textStartY + 3, 100, easeOutCubic, null);
-  }, 1350);
-
+    fakeCursor.classList.add('is-frustrated');
+  }, 2150);
   addTimer(() => {
-    animCursor(textStartX + 8, textStartY - 2, 100, easeOutCubic, null);
-  }, 1450);
-
-  addTimer(() => {
-    animCursor(textStartX, textStartY, 120, easeOutCubic, null);
-  }, 1550);
-
-  addTimer(() => {
-    fakeCursor.classList.remove('is-forbidden');
-  }, 1900);
+    fakeCursor.classList.remove('is-frustrated');
+  }, 2500);
 
   addTimer(() => {
     animCursorCurve(cBtnX, cBtnY, 700, easeOutQuart, null, null);
@@ -414,24 +431,48 @@ function runAnim() {
     animCursorCurve(textStartX, textStartY, 620, easeOutQuart, null, null);
   }, 6900);
 
+  // --- 프리미엄 피날레: 확신에 찬 스윕과 감상(Admire) ---
   addTimer(() => {
-    fakeCursor.classList.add('is-text');
+    fakeCursor.classList.add('is-text'); // I-beam으로 전환
+  }, 7400); 
+
+  addTimer(() => {
+    fakeCursor.style.transition = 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1)';
+    fakeCursor.style.transform  = 'scale(0.85)'; // 부드럽고 확신에 찬 꾹 누름
   }, 7500);
 
   addTimer(() => {
-    animCursorCurve(textEndX, textStartY, 700, easeOutCubic, (t) => {
-      if (demoTextHl) demoTextHl.style.clipPath = `inset(0 ${Math.max(0, (1 - t) * 100)}% 0 0 round 6px)`;
+    // 반동을 0.6 수준으로 줄인 Soft Easing을 사용하여 과한 오버슛 방지
+    animCursorCurve(textEndX, textEndY, 1100, easeOutBackSoft, (t) => {
+      if (demoTextHl) {
+        const prog = Math.max(0, Math.min(1, t));
+        demoTextHl.style.clipPath = `inset(0 ${100 - prog * 100}% 0 0)`;
+      }
     }, null);
-  }, 7650);
+  }, 7700);
 
   addTimer(() => {
-    fakeCursor.classList.remove('is-text');
-  }, 8600);
+    fakeCursor.style.transform  = 'scale(1)'; // 드래그 끝. 마우스 버튼 뗌
+  }, 8800);
+
+  // 텍스트 끝 지점(textEndX, textEndY)에서 약 300ms 동안 가만히 머무름
+  // 유저가 하이라이트된 텍스트를 정확히 '확인'하는 시선 체류 시간 확보
 
   addTimer(() => {
-    fakeCursor.style.transition = 'opacity 0.4s ease';
-    fakeCursor.style.opacity    = '0';
-  }, 9000);
+    fakeCursor.classList.remove('is-text'); // 다시 화살표로 복귀
+  }, 9100);
+
+  addTimer(() => {
+    // 감상 후, 마우스를 화면 바깥(우측 하단)으로 휙 던지는 자연스러운 퇴장 (가속 곡선 easeInCubic 사용)
+    animCursor(textEndX + 90, textEndY + 70, 550, easeInCubic, null);
+  }, 9150);
+
+  addTimer(() => {
+    // 휙 빠지는 도중에 Z축으로 멀어지듯 스케일 다운 + 페이드 아웃 (가장 고급스러운 소멸 방식)
+    fakeCursor.style.transition = 'opacity 0.35s ease, transform 0.35s ease';
+    fakeCursor.style.opacity    = '0'; 
+    fakeCursor.style.transform  = 'scale(0.8)';
+  }, 9350);
 
   addTimer(() => {
     bookmarkBar.classList.remove('visible');
@@ -449,7 +490,7 @@ function runAnim() {
     clearTimeout(safetyTimer);
     animLock = false;
     scheduleAnim();
-  }, 10000);
+  }, 10500);
 }
 
 installBtn.addEventListener('click', () => resetAnim(false));
@@ -605,7 +646,7 @@ const observer = new MutationObserver((mutations) => {
         const card = document.querySelector('.card');
         const bgText = document.querySelector('.demo-text-bg');
         
-        const bgHTML = '<div style="display:flex;flex-direction:column;align-items:center;"><span style="display:flex;align-items:center;gap:6px;color:#1d1d1f;font-weight:600;font-size:14px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>텍스트 선택 활성화됨</span><span style="font-size:12px;color:#8e8e93;font-weight:400;margin-top:4px;">이제 자유롭게 복사할 수 있습니다.</span></div>';
+        const bgHTML = '<div style="display:flex;flex-direction:column;align-items:center;"><span class="shimmer-text" style="display:flex;align-items:center;gap:6px;font-weight:600;font-size:14px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>텍스트 선택 활성화됨</span><span style="font-size:12px;color:#8e8e93;font-weight:400;margin-top:4px;">이제 자유롭게 복사할 수 있습니다.</span></div>';
         
         if (card) {
           card.classList.remove('card-pulse');
