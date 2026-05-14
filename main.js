@@ -46,49 +46,26 @@ document.querySelectorAll('.faq-trigger').forEach(trigger => {
   });
 });
 
-// ── Copy button ──
-document.getElementById('copyBtn').addEventListener('click', () => {
-  navigator.clipboard.writeText(BOOKMARKLET_CODE).then(() => {
-    const btn = document.getElementById('copyBtn');
-    btn.classList.add('copied');
-    btn.innerHTML = `
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
-        <polyline points="20 6 9 16 4 11"/>
-      </svg>
-      복사됨`;
-    setTimeout(() => {
-      btn.classList.remove('copied');
-      btn.innerHTML = `
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-          <rect x="9" y="9" width="13" height="13" rx="2"/>
-          <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
-        </svg>
-        코드 복사`;
-    }, 2000);
-  });
-});
+// ── Copy buttons ──
+const SVG_COPY = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>코드 복사`;
+const SVG_DONE = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="20 6 9 16 4 11"/></svg>복사됨`;
 
-// ── Copy button (Android) ──
-document.getElementById('copyBtnAndroid').addEventListener('click', () => {
-  navigator.clipboard.writeText(BOOKMARKLET_CODE_ANDROID).then(() => {
-    const btn = document.getElementById('copyBtnAndroid');
-    btn.classList.add('copied');
-    btn.innerHTML = `
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
-        <polyline points="20 6 9 16 4 11"/>
-      </svg>
-      복사됨`;
-    setTimeout(() => {
-      btn.classList.remove('copied');
-      btn.innerHTML = `
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-          <rect x="9" y="9" width="13" height="13" rx="2"/>
-          <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
-        </svg>
-        코드 복사`;
-    }, 2000);
+function setupCopyBtn(id, code) {
+  document.getElementById(id).addEventListener('click', () => {
+    navigator.clipboard.writeText(code).then(() => {
+      const btn = document.getElementById(id);
+      btn.classList.add('copied');
+      btn.innerHTML = SVG_DONE;
+      setTimeout(() => {
+        btn.classList.remove('copied');
+        btn.innerHTML = SVG_COPY;
+      }, 2000);
+    });
   });
-});
+}
+
+setupCopyBtn('copyBtn', BOOKMARKLET_CODE);
+setupCopyBtn('copyBtnAndroid', BOOKMARKLET_CODE_ANDROID);
 
 // ── Drag demo animation ──
 const fakeCursor  = document.getElementById('fakeCursor');
@@ -229,26 +206,26 @@ function resetAnim(reschedule = true) {
   bmSlot.style.transition = '';
 
   dragBtn.style.transition = '';
-  dragBtn.classList.remove('is-dimmed');
+  dragBtn.classList.remove('is-dimmed', 'wiggle', 'is-pressed');
 
   const demoTextHl = document.getElementById('demoTextHl');
   if (demoTextHl) demoTextHl.style.clipPath = '';
-  fakeCursor.classList.remove('wiggle');
+  fakeCursor.classList.remove('wiggle', 'is-forbidden', 'is-text');
 
-  const old = document.getElementById('__unlock_toast__');
+  const old = document.getElementById('__demo_toast__');
   if (old) old.remove();
 
   if (reschedule && !document.hidden) scheduleAnim();
 }
 
 function showDemoToast() {
-  const old = document.getElementById('__unlock_toast__');
+  const old = document.getElementById('__demo_toast__');
   if (old) old.remove();
 
   const svgCheck = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2.5 7L5.5 10L11.5 4" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
   const t = document.createElement('div');
-  t.id = '__unlock_toast__';
+  t.id = '__demo_toast__';
   t.style.cssText = 'position:fixed;top:50px;left:50%;transform:translateX(-50%) translateY(-10px);z-index:2147483647;display:flex;align-items:center;gap:9px;background:rgba(28,28,30,0.88);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:0.5px solid rgba(255,255,255,0.12);border-radius:999px;padding:8px 16px 8px 8px;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",sans-serif;font-size:13px;font-weight:500;color:#fff;letter-spacing:-0.01em;opacity:0;transition:opacity 0.2s ease,transform 0.2s ease;pointer-events:none;white-space:nowrap;';
 
   const ic = document.createElement('span');
@@ -338,20 +315,28 @@ function runAnim() {
   }, 200);
 
   addTimer(() => {
-    animCursor(textEndX, textStartY, 380, easeOutCubic, null);
-  }, 1050);
+    fakeCursor.classList.add('is-forbidden');
+  }, 950);
 
   addTimer(() => {
-    animCursor(textStartX, textStartY, 220, easeOutQuart, null);
-  }, 1520);
+    animCursor(textStartX + 15, textStartY, 150, easeOutCubic, null);
+  }, 1150);
 
   addTimer(() => {
-    fakeCursor.classList.add('wiggle');
-  }, 1800);
+    animCursor(textStartX - 5, textStartY + 3, 100, easeOutCubic, null);
+  }, 1350);
 
   addTimer(() => {
-    fakeCursor.classList.remove('wiggle');
-  }, 2200);
+    animCursor(textStartX + 8, textStartY - 2, 100, easeOutCubic, null);
+  }, 1450);
+
+  addTimer(() => {
+    animCursor(textStartX, textStartY, 120, easeOutCubic, null);
+  }, 1550);
+
+  addTimer(() => {
+    fakeCursor.classList.remove('is-forbidden');
+  }, 1900);
 
   addTimer(() => {
     animCursorCurve(cBtnX, cBtnY, 700, easeOutQuart, null, null);
@@ -369,13 +354,16 @@ function runAnim() {
     dragBtn.style.transition = 'opacity 0.35s ease';
     dragBtn.classList.add('is-dimmed');
 
+    dragGhost.style.transition = 'none';
     dragGhost.style.left      = gFromX + 'px';
     dragGhost.style.top       = gFromY + 'px';
     dragGhost.style.transform = 'scale(1.02) rotate(-3deg)';
+    dragGhost.style.opacity   = '0';
+    dragGhost.style.boxShadow = '0 8px 28px rgba(0,0,0,0.18)';
+    void dragGhost.offsetWidth;
     dragGhost.style.transition = 'opacity 0.22s ease, transform 0.3s cubic-bezier(0.34,1.4,0.64,1)';
     dragGhost.style.opacity   = '1';
     dragGhost.style.transform = 'scale(1) rotate(0deg)';
-    dragGhost.style.boxShadow = '0 8px 28px rgba(0,0,0,0.18)';
   }, 3330);
 
   addTimer(() => {
@@ -427,10 +415,18 @@ function runAnim() {
   }, 6900);
 
   addTimer(() => {
+    fakeCursor.classList.add('is-text');
+  }, 7500);
+
+  addTimer(() => {
     animCursorCurve(textEndX, textStartY, 700, easeOutCubic, (t) => {
       if (demoTextHl) demoTextHl.style.clipPath = `inset(0 ${Math.max(0, (1 - t) * 100)}% 0 0 round 6px)`;
     }, null);
-  }, 7750);
+  }, 7650);
+
+  addTimer(() => {
+    fakeCursor.classList.remove('is-text');
+  }, 8600);
 
   addTimer(() => {
     fakeCursor.style.transition = 'opacity 0.4s ease';
