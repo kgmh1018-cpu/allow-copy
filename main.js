@@ -420,12 +420,18 @@ function runAnim() {
     bmGap.innerHTML = GAP_FILLED_HTML;
     requestAnimationFrame(() => {
       const filled = document.getElementById('bmFilled');
-      if (filled) filled.classList.add('is-visible');
+      if (filled) {
+        filled.style.transform = 'scale(0.96)';
+        filled.classList.add('is-visible');
+        requestAnimationFrame(() => {
+          filled.style.transform = '';
+        });
+      }
     });
 
-    dragGhost.style.transition = 'opacity 0.15s ease-out, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)';
+    dragGhost.style.transition = 'transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.2s ease-out';
+    dragGhost.style.transform  = 'scale(0.85) translateY(2px) rotate(0deg)';
     dragGhost.style.opacity    = '0';
-    dragGhost.style.transform  = 'scale(0.92) translateY(1px) rotate(0deg)';
   }, 4680);
 
   addTimer(() => { animCursor(cRetractX, cRetractY, 520, easeInOutSine, null); }, 5020);

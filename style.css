@@ -76,14 +76,15 @@ body {
   white-space: nowrap;
   opacity: 0;
   transform-origin: center;
-  transition: opacity 0.2s ease, background 0.09s ease, transform 0.12s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition: opacity 0.25s ease, background 0.2s ease, transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .bm-gap-filled.is-visible {
   opacity: 1;
 }
 .bm-gap-filled.is-clicking {
   background: rgba(0, 0, 0, 0.08);
-  transform: scale(0.91);
+  transform: scale(0.94);
+  transition: opacity 0.2s ease, background 0.05s ease, transform 0.12s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 .bm-drop-indicator {
   position: absolute;
