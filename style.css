@@ -588,16 +588,16 @@ kbd {
 }
 
 @keyframes shimmerUnlock {
-  0% { background-position: 200% center; }
-  100% { background-position: -200% center; }
+  0%   { background-position: 120% center; }
+  100% { background-position: -20% center; }
 }
 .shimmer-text {
-  background: linear-gradient(120deg, #1d1d1f 30%, #b0b0b5 50%, #1d1d1f 70%);
-  background-size: 200% auto;
+  background: linear-gradient(90deg, #1d1d1f 40%, #ffffff 50%, #1d1d1f 60%);
+  background-size: 300% auto;
   color: transparent !important;
   -webkit-background-clip: text;
   background-clip: text;
-  animation: shimmerUnlock 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  animation: shimmerUnlock 0.55s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 /* ── Wiggle ── */
@@ -695,9 +695,9 @@ kbd {
 }
 
 .text-reveal {
-  animation: textReveal 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: textReveal 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 @keyframes textReveal {
-  0% { opacity: 0; transform: translateY(6px); filter: blur(4px); }
-  100% { opacity: 1; transform: translateY(0); filter: blur(0); }
+  0%   { opacity: 0; transform: translateY(5px); }
+  100% { opacity: 1; transform: translateY(0); }
 }

@@ -101,6 +101,7 @@ function easeHumanDrag(t)  { return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 
 function easeOutBack(t)    { const c1 = 1.70158; return 1 + (c1 + 1) * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); }
 function easeOutBackSoft(t){ const c1 = 0.6; return 1 + (c1 + 1) * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); }
 function easeInCubic(t)    { return t * t * t; }
+function easeOutExpo(t)    { return t === 1 ? 1 : 1 - Math.pow(2, -10 * t); }
 
 function cancelRafs() {
   rafIds.forEach(cancelAnimationFrame);
@@ -283,11 +284,12 @@ function runAnim() {
   const firstLine = textRects[0];
   const lastLine = textRects[textRects.length - 1];
 
-  const textStartX = firstLine.left - 6 - 10;
+  const paddingX = 8;
+  const textStartX = firstLine.left - paddingX - 10;
   const textStartY = firstLine.top + (firstLine.height / 2) - 10;
   
-  const textEndX   = lastLine.right + 12 - 10;
-  const textEndY   = lastLine.bottom - (lastLine.height * 0.2) - 10;
+  const textEndX   = lastLine.right + paddingX - 10;
+  const textEndY   = lastLine.top + (lastLine.height / 2) - 10;
 
   const cBtnX  = btnRect.left  + btnRect.width  / 2 - 10 + 6;
   const cBtnY  = btnRect.top   + btnRect.height / 2 - 10 + 4;
@@ -404,7 +406,8 @@ function runAnim() {
   }, 4680);
 
   addTimer(() => {
-    bmSlot.style.transition = 'transform 0.3s cubic-bezier(0.34,1.55,0.64,1)';
+    // 말랑거리는 젤리 느낌(1.55) 대신, 자석이 단단하게 '착!' 붙는 느낌(1.15)으로 텐션을 꽉 조임
+    bmSlot.style.transition = 'transform 0.25s cubic-bezier(0.34,1.15,0.64,1)';
     bmSlot.style.transform  = 'scale(1) translateZ(0)';
   }, 4820);
 
@@ -442,8 +445,7 @@ function runAnim() {
   }, 7500);
 
   addTimer(() => {
-    // 반동을 0.6 수준으로 줄인 Soft Easing을 사용하여 과한 오버슛 방지
-    animCursorCurve(textEndX, textEndY, 1100, easeOutBackSoft, (t) => {
+    animCursorCurve(textEndX, textEndY, 1100, easeOutExpo, (t) => {
       if (demoTextHl) {
         const prog = Math.max(0, Math.min(1, t));
         demoTextHl.style.clipPath = `inset(0 ${100 - prog * 100}% 0 0)`;
@@ -595,10 +597,11 @@ document.addEventListener('drop', (e) => {
 }, true);
 
 // 5. 기본 복사 방지 (dragstart 분리 후 간소화)
+const _blockHandler = e => {
+  if (!e.target.closest('.drag-btn')) e.preventDefault();
+};
 ['contextmenu', 'selectstart', 'copy'].forEach(ev => {
-  document.addEventListener(ev, e => {
-    if (!e.target.closest('.drag-btn')) e.preventDefault();
-  }, true);
+  document.addEventListener(ev, _blockHandler, true);
 });
 
 document.body.style.userSelect = 'none';
@@ -609,6 +612,12 @@ const observer = new MutationObserver((mutations) => {
     for (const node of m.addedNodes) {
       if (node.tagName === 'STYLE' && node.textContent.includes('user-select:text!important')) {
         isUnlocked = true;
+        
+        ['contextmenu', 'selectstart', 'copy'].forEach(ev => {
+          document.removeEventListener(ev, _blockHandler, true);
+        });
+        document.body.style.userSelect = '';
+        document.body.style.webkitUserSelect = '';
         
         // 1. 타이머와 프레임 이동 즉시 정지 (위치 고정)
         animTimers.forEach(clearTimeout);
@@ -646,7 +655,7 @@ const observer = new MutationObserver((mutations) => {
         const card = document.querySelector('.card');
         const bgText = document.querySelector('.demo-text-bg');
         
-        const bgHTML = '<div style="display:flex;flex-direction:column;align-items:center;"><span class="shimmer-text" style="display:flex;align-items:center;gap:6px;font-weight:600;font-size:14px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>텍스트 선택 활성화됨</span><span style="font-size:12px;color:#8e8e93;font-weight:400;margin-top:4px;">이제 자유롭게 복사할 수 있습니다.</span></div>';
+        const bgHTML = '<div style="display:flex;flex-direction:column;align-items:center;"><span style="display:flex;align-items:center;gap:6px;font-weight:600;font-size:14px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1d1d1f" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg><span class="shimmer-text">텍스트 선택 활성화됨</span></span><span style="font-size:12px;color:#8e8e93;font-weight:400;margin-top:4px;">이제 자유롭게 복사할 수 있습니다.</span></div>';
         
         if (card) {
           card.classList.remove('card-pulse');
