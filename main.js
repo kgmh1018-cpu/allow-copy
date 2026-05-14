@@ -75,8 +75,8 @@ const dragBtn     = document.getElementById('bookmarklet-link');
 const dragGhost   = document.getElementById('drag-ghost');
 const pageEl      = document.querySelector('.page');
 
-const SLOT_EMPTY_HTML  = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Allow-Copy`;
-const SLOT_FILLED_HTML = `<div style="width:12px;height:12px;border-radius:3px;background:#1d1d1f;flex-shrink:0;"></div>Allow-Copy`;
+const SLOT_EMPTY_HTML  = `<div style="display:flex;align-items:center;gap:5px;opacity:0;"><div style="width:14px;height:14px;flex-shrink:0;"></div><span style="font-size:12px;">Allow-Copy</span></div>`;
+const SLOT_FILLED_HTML = `<div style="width:14px;height:14px;border-radius:3px;background:#1d1d1f;flex-shrink:0;"></div><span style="font-size:12px;font-weight:400;color:#1d1d1f;">Allow-Copy</span>`;
 
 const ANIM_CYCLE  = 2500;
 const ANIM_SAFETY = 12000;
@@ -205,7 +205,7 @@ function resetAnim(reschedule = true) {
   bookmarkBar.style.transition = 'none';
   bookmarkBar.classList.remove('visible');
 
-  bmSlot.classList.remove('success');
+  bmSlot.classList.remove('success', 'is-expanded');
   bmSlot.innerHTML = SLOT_EMPTY_HTML;
   bmSlot.style.transform  = '';
   bmSlot.style.transition = '';
@@ -269,8 +269,17 @@ function runAnim() {
 
   bookmarkBar.style.transition = 'none';
   bookmarkBar.style.transform  = 'translateY(0)';
-  void bookmarkBar.offsetHeight;
+  
+  /* 강건성 패치: 측정하는 순간에는 슬롯의 트랜지션을 꺼서 최종 110px 너비를 즉시 받아냅니다. */
+  bmSlot.style.transition = 'none'; 
+  bmSlot.classList.add('is-expanded');
+  void bookmarkBar.offsetHeight; 
+  
   const slotRect = bmSlot.getBoundingClientRect();
+  
+  bmSlot.classList.remove('is-expanded');
+  bmSlot.style.transition = ''; /* 트랜지션 원상복구 */
+  
   bookmarkBar.style.transform  = '';
   bookmarkBar.style.transition = '';
 
@@ -382,13 +391,13 @@ function runAnim() {
     dragGhost.style.transition = 'none';
     dragGhost.style.left      = gFromX + 'px';
     dragGhost.style.top       = gFromY + 'px';
-    dragGhost.style.transform = 'scale(1.02) rotate(-3deg)';
+    dragGhost.style.transform = 'scale(0.95) rotate(-2deg)';
     dragGhost.style.opacity   = '0';
-    dragGhost.style.boxShadow = '0 8px 28px rgba(0,0,0,0.18)';
+    dragGhost.style.boxShadow = '0 16px 32px rgba(0,0,0,0.2), 0 4px 12px rgba(0,0,0,0.1)';
     void dragGhost.offsetWidth;
-    dragGhost.style.transition = 'opacity 0.22s ease, transform 0.3s cubic-bezier(0.34,1.4,0.64,1)';
+    dragGhost.style.transition = 'opacity 0.15s ease-out, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)';
     dragGhost.style.opacity   = '1';
-    dragGhost.style.transform = 'scale(1) rotate(0deg)';
+    dragGhost.style.transform = 'scale(1.04) rotate(0deg)';
   }, 3330);
 
   addTimer(() => {
@@ -401,21 +410,27 @@ function runAnim() {
   }, 3740);
 
   addTimer(() => {
+    bmSlot.classList.add('is-expanded');
+  }, 4200);
+
+  addTimer(() => {
     bmSlot.classList.add('success');
     bmSlot.innerHTML = SLOT_FILLED_HTML;
-    bmSlot.style.transition = 'transform 0.12s cubic-bezier(0.4,0,0.2,1)';
-    bmSlot.style.transform  = 'scale(1.07) translateZ(0)';
+    /* Mac-style Drop: 아이템이 부드럽게 안착하며 슬롯이 살짝 팝 아웃됨 */
+    bmSlot.style.transition = 'transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)';
+    bmSlot.style.transform  = 'scale(1.04)';
 
-    dragGhost.style.transition = 'opacity 0.2s ease, transform 0.2s cubic-bezier(0.4,0,1,1)';
+    /* 잔상(Ghost)은 우아하게 축소되며 정위치에 스냅 */
+    dragGhost.style.transition = 'opacity 0.15s ease-out, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)';
     dragGhost.style.opacity    = '0';
-    dragGhost.style.transform  = 'scale(0.7) rotate(0deg)';
+    dragGhost.style.transform  = 'scale(0.92) translateY(1px) rotate(0deg)';
   }, 4680);
 
   addTimer(() => {
-    // 말랑거리는 젤리 느낌(1.55) 대신, 자석이 단단하게 '착!' 붙는 느낌(1.15)으로 텐션을 꽉 조임
-    bmSlot.style.transition = 'transform 0.25s cubic-bezier(0.34,1.15,0.64,1)';
+    /* 슬롯 스프링 복구 */
+    bmSlot.style.transition = 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)';
     bmSlot.style.transform  = 'scale(1) translateZ(0)';
-  }, 4820);
+  }, 4880);
 
   addTimer(() => { animCursor(cRetractX, cRetractY, 520, easeInOutSine, null); }, 5020);
 
@@ -681,3 +696,39 @@ const observer = new MutationObserver((mutations) => {
   }
 });
 observer.observe(document.head, { childList: true });
+
+let lastWindowWidth = window.innerWidth;
+let resizeDebounceTimer = null;
+
+window.addEventListener('resize', () => {
+  const currentWidth = window.innerWidth;
+
+  if (currentWidth !== lastWindowWidth) {
+    lastWindowWidth = currentWidth;
+    clearTimeout(resizeDebounceTimer);
+
+    if (animLock) {
+      animTimers.forEach(clearTimeout);
+      animTimers = [];
+      cancelRafs();
+      clearTimeout(nextTimer);
+      clearTimeout(safetyTimer);
+
+      fakeCursor.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+      fakeCursor.style.opacity = '0';
+      
+      dragGhost.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+      dragGhost.style.opacity = '0';
+      
+      bookmarkBar.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+      bookmarkBar.classList.remove('visible');
+
+      animLock = false;
+    }
+
+    resizeDebounceTimer = setTimeout(() => {
+      resetAnim(false);
+      scheduleAnim(800); 
+    }, 400);
+  }
+});

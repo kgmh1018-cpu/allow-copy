@@ -52,23 +52,52 @@ body {
   white-space: nowrap;
 }
 .bm-slot {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 5px;
-  padding: 3px 9px;
+  padding: 3px 0;
+  max-width: 0;
+  opacity: 0;
+  overflow: hidden;
   border-radius: 5px;
-  border: 1.5px dashed rgba(0,0,0,0.15);
   font-size: 12px;
-  color: #aaa;
   white-space: nowrap;
-  will-change: transform;
-  transform: translateZ(0);
-  transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease, transform 0.08s ease;
+  will-change: max-width, padding, opacity, transform;
+  /* Apple Expo-Out 곡선 적용: 초반에 확 열리고 끝에서 스르륵 정렬됨 */
+  transition: max-width 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              padding 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.3s ease-out,
+              transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), 
+              background 0.3s ease, box-shadow 0.3s ease;
+}
+.bm-slot.is-expanded {
+  max-width: 110px;
+  padding: 3px 9px;
+  opacity: 1;
 }
 .bm-slot.success {
-  border-color: transparent;
-  background: rgba(0,0,0,0.06);
+  background: rgba(0,0,0,0.05);
   color: #1d1d1f;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+}
+.bm-drop-indicator {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 2px;
+  height: 18px;
+  background: #007aff;
+  border-radius: 1px;
+  transform: translateY(-50%) scaleY(0.4);
+  opacity: 0;
+  animation: indicatorPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s forwards;
+}
+@keyframes indicatorPop {
+  to {
+    transform: translateY(-50%) scaleY(1);
+    opacity: 1;
+  }
 }
 .bm-sep {
   width: 0.5px;
@@ -125,13 +154,15 @@ body {
   align-items: center;
   gap: 7px;
   padding: 8px 16px;
-  background: #1d1d1f;
+  background: rgba(29, 29, 31, 0.88);
   color: #f5f5f7;
   border-radius: 10px;
   font-family: inherit;
   font-size: 12px;
   font-weight: 500;
   letter-spacing: -0.02em;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   pointer-events: none;
   z-index: 150;
   opacity: 0;
