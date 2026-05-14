@@ -433,6 +433,13 @@ body {
 }
 .faq-item.open .faq-chevron {
   transform: rotate(180deg);
+  color: #007aff;
+}
+.faq-item.open {
+  background: rgba(0, 122, 255, 0.035);
+}
+.faq-item.open .faq-label {
+  color: #007aff;
 }
 .faq-body {
   display: grid;
