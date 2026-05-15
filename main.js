@@ -590,8 +590,6 @@ document.addEventListener('dragstart', (e) => {
     if (e.dataTransfer) {
       e.dataTransfer.effectAllowed = 'copy';
       e.dataTransfer.dropEffect = 'copy';
-      e.dataTransfer.setData('text/uri-list', btn.href);
-      e.dataTransfer.setData('text/plain', btn.href);
       
       const ghost = document.getElementById('custom-drag-ghost');
       if (ghost) {
