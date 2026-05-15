@@ -2,3 +2,5 @@ const BOOKMARKLET_CODE = `javascript:(function(){var _m='allow-copy v1.0 | 2026.
 
 
 const BOOKMARKLET_CODE = `javascript:(function(){var _m='allow-copy v1.0 | 2026.05.12';var f=0;function unlock(d){if(!d||!d.body)return;try{['contextmenu','selectstart','copy','dragstart'].forEach(function(ev){d.addEventListener(ev,function(e){e.stopPropagation();},true);});
+
+
