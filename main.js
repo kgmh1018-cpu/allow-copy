@@ -147,7 +147,7 @@ function setupCopyBtn(id, code) {
 setupCopyBtn('copyBtn', BOOKMARKLET_CODE);
 setupCopyBtn('copyBtnAndroid', BOOKMARKLET_CODE_ANDROID);
 
-const FEEDBACK_URL = 'https://script.google.com/macros/s/AKfycbz7_wZNjC2rDutW782xERIU1Q4N82zVXafsLwuF5LM0zpry4TKhODQF6dvi7f--_dNE6w/exec';
+const FEEDBACK_URL = 'https://script.google.com/macros/s/AKfycbwqeuGkU9xNKbON0VpTr7yKmLrFsl2CSHNVgq97z45NXLElw-CskHJGdkIMdqBSWCOdsw/exec';
 
 // ── Feedback view transition ──
 const modalViews      = document.getElementById('modalViews');
@@ -235,7 +235,7 @@ document.getElementById('feedbackSend').addEventListener('click', () => {
       btn.disabled = false;
       textEl.value = '';
     }, 400);
-  }, 700); // 0.7초 동안 체크 아이콘 표시
+  }, 1000); // 1.0초 동안 체크 아이콘 표시
 });
 
 
