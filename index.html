@@ -78,161 +78,155 @@
 
   <div class="modal-overlay" id="modalOverlay">
     <div class="modal" id="modal">
-      <div class="modal-header">
-        <div class="modal-header-text">
-          <span class="modal-title">사용 방법</span>
-          <p class="modal-sub">사이트가 막아둔 복사 기능을 북마크 클릭 한 번으로 되돌려요.</p>
-        </div>
-        <button class="close-btn" id="closeBtn">
-          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-            <line x1="1" y1="1" x2="9" y2="9"/><line x1="9" y1="1" x2="1" y2="9"/>
-          </svg>
-        </button>
-      </div>
-      <div class="modal-body-wrap">
-        <div class="modal-body">
-        <div class="faq-list">
 
-          <div class="faq-item" id="faq1">
-            <button class="faq-trigger" data-target="faq1">
-              <span class="faq-label">Safari 사용자예요 (Mac)</span>
-              <span class="faq-chevron">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
-              </span>
-            </button>
-            <div class="faq-body">
-              <div class="faq-inner">
-                <p class="faq-desc">Safari는 보안 정책상 별도 설정이 필요해요. 최초 1회만 하면 돼요.</p>
-                <ol class="faq-steps">
-                  <li>Safari 메뉴 → 설정 → <strong>고급</strong> 탭 → <em>개발자용 메뉴 보기</em> 체크</li>
-                  <li>상단 메뉴바에 생긴 <strong>개발자용</strong> 클릭</li>
-                  <li><em>스마트 검색 필드에서 JavaScript 허용</em> 체크</li>
-                </ol>
-                <p class="faq-note">이후엔 다른 브라우저와 동일하게 사용할 수 있어요.</p>
-              </div>
+      <div class="modal-views" id="modalViews">
+
+        <!-- 뷰 1: FAQ -->
+        <div class="modal-view" id="viewMain">
+          <div class="modal-header">
+            <div class="modal-header-text">
+              <span class="modal-title">사용 방법</span>
+              <p class="modal-sub">사이트가 막아둔 복사 기능을 북마크 클릭 한 번으로 되돌려요.</p>
             </div>
-          </div>
-
-          <div class="faq-item" id="faq2">
-            <button class="faq-trigger" data-target="faq2">
-              <span class="faq-label">북마크바가 안 보여요</span>
-              <span class="faq-chevron">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
-              </span>
-            </button>
-            <div class="faq-body">
-              <div class="faq-inner">
-                <p class="faq-desc">브라우저별 단축키로 북마크바를 켜세요.</p>
-                <ul class="faq-keys">
-                  <li><span class="faq-browser">Chrome · Edge · Firefox</span><kbd>Ctrl+Shift+B</kbd></li>
-                  <li><span class="faq-browser">Safari</span><kbd>Cmd+Shift+B</kbd></li>
-                </ul>
-              </div>
-            </div>
-          </div>
-
-          <div class="faq-item" id="faq3">
-            <button class="faq-trigger" data-target="faq3">
-              <span class="faq-label">모바일이에요 (아이폰 · 아이패드)</span>
-              <span class="faq-chevron">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
-              </span>
-            </button>
-            <div class="faq-body">
-              <div class="faq-inner">
-                <p class="faq-desc">드래그 설치를 지원하지 않아요. 새 북마크를 만들고 URL 칸에 아래 코드를 붙여넣으세요.</p>
-                <button class="copy-btn" id="copyBtn">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                    <rect x="9" y="9" width="13" height="13" rx="2"/>
-                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
-                  </svg>
-                  코드 복사
-                </button>
-                <p class="faq-warn">원하는 페이지에서 저장한 북마크를 누르면 바로 실행돼요.</p>
-              </div>
-            </div>
-          </div>
-
-          <div class="faq-item" id="faq4">
-            <button class="faq-trigger" data-target="faq4">
-              <span class="faq-label">모바일이에요 (안드로이드)</span>
-              <span class="faq-chevron">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
-              </span>
-            </button>
-            <div class="faq-body">
-              <div class="faq-inner">
-                <p class="faq-desc">드래그 설치를 지원하지 않아요. 아래 코드를 복사한 뒤 북마크에 등록하세요.</p>
-                <button class="copy-btn" id="copyBtnAndroid">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                    <rect x="9" y="9" width="13" height="13" rx="2"/>
-                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
-                  </svg>
-                  코드 복사
-                </button>
-                <ol class="faq-steps">
-                  <li>아무 페이지나 열고 북마크로 저장</li>
-                  <li>저장된 북마크 길게 누르기 → 수정</li>
-                  <li>북마크 이름: <em>복사 허용</em> (예시) / URL(주소): 복사한 코드로 교체 → 저장</li>
-                </ol>
-                <p class="faq-desc">주소창을 누르고 <kbd>ㅂ</kbd> 입력 (예시) → 등록한 북마크 이름(<em>복사 허용</em>) 누르기</p>
-                <p class="faq-warn">⚠ 북마크 목록에서 직접 누르면 작동하지 않아요. 꼭 주소창에서 찾아 실행하세요.</p>
-              </div>
-            </div>
-          </div>
-
-          <div class="faq-item" id="faq5">
-            <button class="faq-trigger" data-target="faq5">
-              <span class="faq-label">서식 없이 붙여넣고 싶어요</span>
-              <span class="faq-chevron">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
-              </span>
-            </button>
-            <div class="faq-body">
-              <div class="faq-inner">
-                <p class="faq-desc">복사한 내용을 붙여넣을 때 일반 텍스트로 붙여넣기(오른쪽 클릭) 또는 아래 단축키를 사용하세요.</p>
-                <ul class="faq-keys">
-                  <li><span class="faq-browser">Chrome · Edge</span><kbd>Ctrl+Shift+V</kbd></li>
-                  <li><span class="faq-browser">Safari</span><kbd>Cmd+Opt+Shift+V</kbd></li>
-                </ul>
-                <p class="faq-note">일부 앱에서는 단축키가 동작하지 않을 수 있어요.</p>
-              </div>
-            </div>
-          </div>
-
-          <div class="faq-item" id="faq6">
-            <button class="faq-trigger" data-target="faq6">
-              <span class="faq-label">실행 후 페이지가 이상해요</span>
-              <span class="faq-chevron">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
-              </span>
-            </button>
-            <div class="faq-body">
-              <div class="faq-inner">
-                <p class="faq-desc">복사 차단을 해제하는 과정에서 페이지 일부 기능이 영향을 받을 수 있어요. <kbd>F5</kbd>로 새로고침하면 원래대로 돌아와요.</p>
-              </div>
-            </div>
-          </div>
-
-        </div>
-        <div class="feedback-section">
-          <div class="feedback-row">
-            <button class="feedback-chip" id="feedbackChip">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="2" y="4" width="20" height="16" rx="2"/>
-                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+            <button class="close-btn" id="closeBtn">
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                <line x1="1" y1="1" x2="9" y2="9"/><line x1="9" y1="1" x2="1" y2="9"/>
               </svg>
-              버그 제보 · 피드백
             </button>
           </div>
-          <div class="feedback-body">
-            <div class="feedback-inner">
-              <textarea class="feedback-textarea" id="feedbackText" placeholder="불편한 점이나 버그를 알려주세요" rows="3"></textarea>
-              <button class="feedback-send" id="feedbackSend">보내기</button>
+          <div class="modal-body-wrap">
+            <div class="modal-body">
+              <div class="faq-list">
+
+                <div class="faq-item" id="faq1">
+                  <button class="faq-trigger" data-target="faq1">
+                    <span class="faq-label">Safari 사용자예요 (Mac)</span>
+                    <span class="faq-chevron"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+                  </button>
+                  <div class="faq-body"><div class="faq-inner">
+                    <p class="faq-desc">Safari는 보안 정책상 별도 설정이 필요해요. 최초 1회만 하면 돼요.</p>
+                    <ol class="faq-steps">
+                      <li>Safari 메뉴 → 설정 → <strong>고급</strong> 탭 → <em>개발자용 메뉴 보기</em> 체크</li>
+                      <li>상단 메뉴바에 생긴 <strong>개발자용</strong> 클릭</li>
+                      <li><em>스마트 검색 필드에서 JavaScript 허용</em> 체크</li>
+                    </ol>
+                    <p class="faq-note">이후엔 다른 브라우저와 동일하게 사용할 수 있어요.</p>
+                  </div></div>
+                </div>
+
+                <div class="faq-item" id="faq2">
+                  <button class="faq-trigger" data-target="faq2">
+                    <span class="faq-label">북마크바가 안 보여요</span>
+                    <span class="faq-chevron"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+                  </button>
+                  <div class="faq-body"><div class="faq-inner">
+                    <p class="faq-desc">브라우저별 단축키로 북마크바를 켜세요.</p>
+                    <ul class="faq-keys">
+                      <li><span class="faq-browser">Chrome · Edge · Firefox</span><kbd>Ctrl+Shift+B</kbd></li>
+                      <li><span class="faq-browser">Safari</span><kbd>Cmd+Shift+B</kbd></li>
+                    </ul>
+                  </div></div>
+                </div>
+
+                <div class="faq-item" id="faq3">
+                  <button class="faq-trigger" data-target="faq3">
+                    <span class="faq-label">모바일이에요 (아이폰 · 아이패드)</span>
+                    <span class="faq-chevron"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+                  </button>
+                  <div class="faq-body"><div class="faq-inner">
+                    <p class="faq-desc">드래그 설치를 지원하지 않아요. 새 북마크를 만들고 URL 칸에 아래 코드를 붙여넣으세요.</p>
+                    <button class="copy-btn" id="copyBtn">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+                      코드 복사
+                    </button>
+                    <p class="faq-warn">원하는 페이지에서 저장한 북마크를 누르면 바로 실행돼요.</p>
+                  </div></div>
+                </div>
+
+                <div class="faq-item" id="faq4">
+                  <button class="faq-trigger" data-target="faq4">
+                    <span class="faq-label">모바일이에요 (안드로이드)</span>
+                    <span class="faq-chevron"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+                  </button>
+                  <div class="faq-body"><div class="faq-inner">
+                    <p class="faq-desc">드래그 설치를 지원하지 않아요. 아래 코드를 복사한 뒤 북마크에 등록하세요.</p>
+                    <button class="copy-btn" id="copyBtnAndroid">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+                      코드 복사
+                    </button>
+                    <ol class="faq-steps">
+                      <li>아무 페이지나 열고 북마크로 저장</li>
+                      <li>저장된 북마크 길게 누르기 → 수정</li>
+                      <li>북마크 이름: <em>복사 허용</em> (예시) / URL(주소): 복사한 코드로 교체 → 저장</li>
+                    </ol>
+                    <p class="faq-desc">주소창을 누르고 <kbd>ㅂ</kbd> 입력 (예시) → 등록한 북마크 이름(<em>복사 허용</em>) 누르기</p>
+                    <p class="faq-warn">⚠ 북마크 목록에서 직접 누르면 작동하지 않아요. 꼭 주소창에서 찾아 실행하세요.</p>
+                  </div></div>
+                </div>
+
+                <div class="faq-item" id="faq5">
+                  <button class="faq-trigger" data-target="faq5">
+                    <span class="faq-label">서식 없이 붙여넣고 싶어요</span>
+                    <span class="faq-chevron"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+                  </button>
+                  <div class="faq-body"><div class="faq-inner">
+                    <p class="faq-desc">복사한 내용을 붙여넣을 때 일반 텍스트로 붙여넣기(오른쪽 클릭) 또는 아래 단축키를 사용하세요.</p>
+                    <ul class="faq-keys">
+                      <li><span class="faq-browser">Chrome · Edge</span><kbd>Ctrl+Shift+V</kbd></li>
+                      <li><span class="faq-browser">Safari</span><kbd>Cmd+Opt+Shift+V</kbd></li>
+                    </ul>
+                    <p class="faq-note">일부 앱에서는 단축키가 동작하지 않을 수 있어요.</p>
+                  </div></div>
+                </div>
+
+                <div class="faq-item" id="faq6">
+                  <button class="faq-trigger" data-target="faq6">
+                    <span class="faq-label">실행 후 페이지가 이상해요</span>
+                    <span class="faq-chevron"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+                  </button>
+                  <div class="faq-body"><div class="faq-inner">
+                    <p class="faq-desc">복사 차단을 해제하는 과정에서 페이지 일부 기능이 영향을 받을 수 있어요. <kbd>F5</kbd>로 새로고침하면 원래대로 돌아와요.</p>
+                  </div></div>
+                </div>
+
+              </div>
+
+              <div class="feedback-entry-row">
+                <button class="feedback-entry-btn" id="feedbackChip">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="4" width="20" height="16" rx="2"/>
+                    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                  </svg>
+                  버그 제보 · 피드백
+                  <svg class="entry-chevron" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 6 15 12 9 18"/></svg>
+                </button>
+              </div>
             </div>
           </div>
+          <div class="modal-body-wrap-fade" id="mainFadeWrap"></div>
         </div>
-      </div>
+
+        <!-- 뷰 2: 피드백 -->
+        <div class="modal-view" id="viewFeedback">
+          <div class="modal-header">
+            <button class="back-btn" id="backBtn">
+              <svg width="7" height="12" viewBox="0 0 7 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 1 1 6 6 11"/>
+              </svg>
+            </button>
+            <span class="modal-title" style="flex:1; text-align:center;">버그 제보 · 피드백</span>
+            <button class="close-btn" id="closeBtnFeedback">
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                <line x1="1" y1="1" x2="9" y2="9"/><line x1="9" y1="1" x2="1" y2="9"/>
+              </svg>
+            </button>
+          </div>
+          <div class="modal-body feedback-view-body">
+            <textarea class="feedback-textarea" id="feedbackText" placeholder="버그나 개선 의견을 남겨주세요." rows="5"></textarea>
+            <button class="feedback-send-full" id="feedbackSend">보내기</button>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>

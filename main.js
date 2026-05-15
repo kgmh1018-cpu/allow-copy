@@ -26,14 +26,14 @@ overlay.addEventListener('mousedown', e => { isOverlayMouseDownBase = (e.target 
 
 installBtn.addEventListener('click', () => openModal(null));
 closeBtn.addEventListener('click',   () => overlay.classList.remove('open'));
-overlay.addEventListener('click', e => { if (e.target === overlay && isOverlayMouseDownBase) overlay.classList.remove('open'); });
 
 // ── Scroll fade hint ──
 (function() {
-  const modalBody = document.querySelector('.modal-body');
-  const modalBodyWrap = document.querySelector('.modal-body-wrap');
+  const modalBody = document.querySelector('#viewMain .modal-body');
+  const modalBodyWrap = document.querySelector('#viewMain .modal-body-wrap');
 
   function updateFade() {
+    if (!modalBodyWrap) return;
     const hasMore = modalBody.scrollHeight - modalBody.scrollTop - modalBody.clientHeight > 4;
     modalBodyWrap.classList.toggle('has-overflow', hasMore);
   }
@@ -45,36 +45,60 @@ overlay.addEventListener('click', e => { if (e.target === overlay && isOverlayMo
   });
 })();
 
-// ── Mobile swipe-down to close ──
+// ── Mobile swipe-down to close (Fixed Premium Architecture) ──
 (function() {
   const modal = document.getElementById('modal');
-  let startY = 0, currentY = 0, isDragging = false;
+  let startY = 0;
+  let isDragging = false;
+  let dragMode = 'none'; // 'none' | 'drag' | 'scroll'
+  let scrollEl = null;
 
   modal.addEventListener('touchstart', e => {
     if (window.innerWidth > 640) return;
+    
+    scrollEl = e.target.closest('.modal-body');
     startY = e.touches[0].clientY;
-    currentY = startY;
     isDragging = true;
+    dragMode = 'none'; // 터치 시작 시 의도 초기화
+    
     modal.style.transition = 'none';
   }, { passive: true });
 
   modal.addEventListener('touchmove', e => {
     if (!isDragging || window.innerWidth > 640) return;
-    currentY = e.touches[0].clientY;
-    const dy = Math.max(0, currentY - startY);
-    modal.style.transform = `translateY(${dy}px)`;
-  }, { passive: true });
+    
+    const currentY = e.touches[0].clientY;
+    const dy = currentY - startY;
+    
+    if (dragMode === 'none') {
+      if (Math.abs(dy) > 3) {
+        if (!scrollEl || (scrollEl.scrollTop <= 0 && dy > 0)) {
+          dragMode = 'drag';
+        } else {
+          dragMode = 'scroll';
+        }
+      }
+    }
+    
+    if (dragMode === 'drag') {
+      e.preventDefault();
+      modal.style.transform = `translateY(${Math.max(0, dy)}px)`;
+    }
+  }, { passive: false });
 
-  modal.addEventListener('touchend', () => {
+  modal.addEventListener('touchend', e => {
     if (!isDragging || window.innerWidth > 640) return;
     isDragging = false;
     modal.style.transition = '';
-    const dy = currentY - startY;
-    if (dy > 80) {
-      overlay.classList.remove('open');
-      setTimeout(() => { modal.style.transform = ''; }, 400);
-    } else {
-      modal.style.transform = '';
+    
+    if (dragMode === 'drag') {
+      const dy = e.changedTouches[0].clientY - startY;
+      if (dy > 80) {
+        overlay.classList.remove('open');
+        setTimeout(() => { modal.style.transform = ''; }, 400);
+      } else {
+        modal.style.transform = '';
+      }
     }
   });
 })();
@@ -125,35 +149,93 @@ setupCopyBtn('copyBtnAndroid', BOOKMARKLET_CODE_ANDROID);
 
 const FEEDBACK_URL = 'https://script.google.com/macros/s/AKfycbz7_wZNjC2rDutW782xERIU1Q4N82zVXafsLwuF5LM0zpry4TKhODQF6dvi7f--_dNE6w/exec';
 
-document.getElementById('feedbackChip').addEventListener('click', () => {
-  document.querySelector('.feedback-section').classList.toggle('open');
+// ── Feedback view transition ──
+const modalViews      = document.getElementById('modalViews');
+const feedbackChip    = document.getElementById('feedbackChip');
+const backBtn         = document.getElementById('backBtn');
+const closeBtnFb      = document.getElementById('closeBtnFeedback');
+
+function goFeedback() {
+  const views = modalViews;
+  const feedbackView = document.getElementById('viewFeedback');
+  views.style.height = views.offsetHeight + 'px';
+  views.classList.add('on-feedback');
+  requestAnimationFrame(() => {
+    views.style.height = feedbackView.scrollHeight + 'px';
+  });
+  views.addEventListener('transitionend', function onEnd(e) {
+    if (e.propertyName !== 'height') return;
+    views.style.height = '';
+    views.removeEventListener('transitionend', onEnd);
+    document.getElementById('feedbackText').focus();
+  });
+}
+function goMain() {
+  const views = modalViews;
+  const mainView = document.getElementById('viewMain');
+  views.style.height = views.offsetHeight + 'px';
+  views.classList.remove('on-feedback');
+  requestAnimationFrame(() => {
+    views.style.height = mainView.scrollHeight + 'px';
+  });
+  views.addEventListener('transitionend', function onEnd(e) {
+    if (e.propertyName !== 'height') return;
+    views.style.height = '';
+    views.removeEventListener('transitionend', onEnd);
+  });
+}
+
+feedbackChip.addEventListener('click', goFeedback);
+backBtn.addEventListener('click', goMain);
+closeBtnFb.addEventListener('click', () => {
+  overlay.classList.remove('open');
+  setTimeout(goMain, 400);
+});
+
+overlay.addEventListener('click', e => {
+  if (e.target === overlay && isOverlayMouseDownBase) {
+    overlay.classList.remove('open');
+    setTimeout(goMain, 400);
+  }
+});
+
+document.getElementById('feedbackText').addEventListener('keydown', e => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+    e.preventDefault();
+    document.getElementById('feedbackSend').click();
+  }
 });
 
 document.getElementById('feedbackSend').addEventListener('click', () => {
   const textEl = document.getElementById('feedbackText');
-  const btn = document.getElementById('feedbackSend');
-  const text = textEl.value.trim();
+  const btn    = document.getElementById('feedbackSend');
+  const text   = textEl.value.trim();
   if (!text) return;
+  
+  // 1. 즉시 성공 상태로 전환 (Optimistic UI)
   btn.disabled = true;
-  btn.textContent = '전송 중...';
+  btn.innerHTML = '<svg class="sent-check-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+  btn.classList.add('sent');
+
+  // 2. 백그라운드에서 조용히 전송 (Fire-and-forget)
   fetch(FEEDBACK_URL, {
     method: 'POST',
     mode: 'no-cors',
     body: new URLSearchParams({ message: text })
-  }).then(() => {
-    btn.textContent = '전송됐어요 ✓';
-    btn.classList.add('sent');
-    textEl.value = '';
+  }).catch(() => {}); 
+
+  // 3. 완료 상태를 짧게 보여준 뒤 메인 탭으로 부드럽게 복귀
+  setTimeout(() => {
+    goMain(); // 모달 전체를 닫지 않고 메인 뷰로 슬라이드 복귀
+    
+    // 화면 전환 애니메이션이 완전히 끝난 후 조용히 내부 폼 초기화
     setTimeout(() => {
       btn.textContent = '보내기';
       btn.classList.remove('sent');
       btn.disabled = false;
-      document.querySelector('.feedback-section').classList.remove('open');
-    }, 2000);
-  }).catch(() => {
-    btn.textContent = '다시 시도해주세요';
-    btn.disabled = false;
-  });
+      textEl.value = '';
+    }, 400);
+  }, 700); // 0.7초 동안 체크 아이콘 표시
 });
 
 
@@ -737,7 +819,9 @@ document.addEventListener('drop', (e) => {
 
 // 5. 기본 복사 방지 (dragstart 분리 후 간소화)
 const _blockHandler = e => {
-  if (!e.target.closest('.drag-btn')) e.preventDefault();
+  if (!e.target.closest('.drag-btn') && !e.target.closest('.modal')) {
+    e.preventDefault();
+  }
 };
 ['contextmenu', 'selectstart', 'copy'].forEach(ev => {
   document.addEventListener(ev, _blockHandler, true);

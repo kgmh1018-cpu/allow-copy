@@ -475,6 +475,23 @@ body {
     opacity: 1;
     transition: transform 0.38s cubic-bezier(0.32, 0.72, 0, 1);
     max-height: 88vh;
+    max-height: 88dvh;
+    display: flex;
+    flex-direction: column;
+  }
+  .modal-views {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  #viewMain {
+    flex: 1;
+    min-height: 0;
+  }
+  .modal-body-wrap {
+    flex: 1;
+    min-height: 0;
     display: flex;
     flex-direction: column;
   }
@@ -489,6 +506,7 @@ body {
     flex-shrink: 0;
   }
   .modal-body {
+    max-height: none;
     overflow-y: auto;
     overscroll-behavior: contain;
     scrollbar-width: none;
@@ -850,86 +868,164 @@ kbd {
   100% { opacity: 1; transform: translateY(0); }
 }
 
-/* ── Feedback section ── */
-.feedback-section {
-  padding-top: 14px;
-  margin-top: 2px;
+/* ── Modal view slide ── */
+.modal-views {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  transition: height 0.36s cubic-bezier(0.32, 0.72, 0, 1);
 }
-.feedback-row {
+.modal-view {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  will-change: transform, opacity;
+}
+#viewMain {
+  transition: transform 0.36s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.2s ease;
+  transform: translateX(0);
+  opacity: 1;
+}
+#viewFeedback {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  transition: transform 0.36s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.2s ease;
+  transform: translateX(100%);
+  opacity: 0;
+  pointer-events: none;
+}
+.modal-views.on-feedback #viewMain {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  transform: translateX(-30%);
+  opacity: 0;
+  pointer-events: none;
+}
+.modal-views.on-feedback #viewFeedback {
+  position: relative;
+  transform: translateX(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ── Feedback entry button ── */
+.feedback-entry-row {
+  padding: 14px 0 2px;
   display: flex;
   justify-content: flex-end;
 }
-.feedback-chip {
+.feedback-entry-btn {
   display: flex;
   align-items: center;
-  gap: 5px;
-  padding: 5px 10px;
+  gap: 6px;
+  padding: 7px 14px 7px 12px;
   background: #f5f5f7;
   border: 0.5px solid #e8e8e8;
-  border-radius: 8px;
+  border-radius: 20px;
   font-family: inherit;
-  font-size: 11.5px;
+  font-size: 12px;
+  font-weight: 500;
   color: #6e6e73;
   cursor: pointer;
   letter-spacing: -0.01em;
   transition: background 0.15s, color 0.15s;
 }
-.feedback-chip:hover { background: #efefef; color: #3c3c3c; }
-.feedback-body {
-  display: grid;
-  grid-template-rows: 0fr;
-  transition: grid-template-rows 0.32s cubic-bezier(0.4, 0, 0.2, 1);
-  overflow: hidden;
+.feedback-entry-btn:hover { background: #ebebeb; color: #3c3c3c; }
+.entry-chevron { opacity: 0.4; }
+
+/* ── Back button ── */
+.back-btn {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  background: #f2f2f2;
+  border: none;
+  cursor: pointer;
+  color: #555;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s;
 }
-.feedback-section.open .feedback-body {
-  grid-template-rows: 1fr;
-}
-.feedback-inner {
-  min-height: 0;
-  overflow: hidden;
+.back-btn:hover { background: #e8e8e8; }
+
+/* ── Feedback view body ── */
+.feedback-view-body {
+  padding: 8px 20px 24px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding-top: 10px;
-  opacity: 0;
-  transform: translateY(-6px);
-  transition: opacity 0.22s ease, transform 0.26s cubic-bezier(0.22, 1, 0.36, 1);
+  gap: 16px;
 }
-.feedback-section.open .feedback-inner {
+.feedback-send-full {
+  width: 100%;
+  padding: 14px;
+  background: #1d1d1f;
+  color: #ffffff;
+  border: none;
+  border-radius: 14px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  letter-spacing: -0.01em;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+}
+.feedback-send-full:hover {
+  background: #2c2c2e;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+.feedback-send-full:active {
+  transform: scale(0.97);
+}
+.feedback-send-full:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+.feedback-send-full.sent,
+.feedback-send-full.sent:disabled {
+  background: #1d1d1f; /* 기존 색상을 유지하여 차분하게 */
+  color: #ffffff;
   opacity: 1;
-  transform: translateY(0);
+  cursor: default;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
+
+@keyframes drawCheck {
+  0% { opacity: 0; transform: scale(0.5); }
+  70% { transform: scale(1.1); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.sent-check-icon {
+  animation: drawCheck 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
 .feedback-textarea {
   width: 100%;
-  padding: 10px 12px;
-  border: 0.5px solid #e8e8e8;
-  border-radius: 10px;
-  background: #fafafa;
+  padding: 16px;
+  border: 1px solid rgba(0,0,0,0.04);
+  border-radius: 16px;
+  background: #f5f5f7;
   font-family: inherit;
-  font-size: 12px;
+  font-size: 14px;
   color: #1d1d1f;
-  line-height: 1.55;
+  line-height: 1.6;
   resize: none;
   outline: none;
   letter-spacing: -0.01em;
-  transition: border-color 0.15s, background 0.15s;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.01);
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+  user-select: text;
+  -webkit-user-select: text;
 }
-.feedback-textarea::placeholder { color: #c8c8c8; }
-.feedback-textarea:focus { border-color: #c0c0c0; background: #fff; }
-.feedback-send {
-  align-self: flex-end;
-  padding: 5px 14px;
-  background: #1d1d1f;
-  color: #f5f5f7;
-  border: none;
-  border-radius: 20px;
-  font-family: inherit;
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  letter-spacing: -0.01em;
-  transition: opacity 0.15s;
+.feedback-textarea::placeholder {
+  color: #a1a1a6;
 }
-.feedback-send:hover { opacity: 0.75; }
-.feedback-send:disabled { opacity: 0.35; cursor: default; }
-.feedback-send.sent { background: #28a745; opacity: 1; }
+.feedback-textarea:focus {
+  background: #ffffff;
+  border-color: rgba(0,0,0,0.08);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.04), 0 0 0 4px rgba(0,0,0,0.02);
+}
