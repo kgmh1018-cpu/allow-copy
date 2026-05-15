@@ -316,8 +316,8 @@ function runAnim() {
 
   const cRetractX = cSlotX + 22;
   const cRetractY = cSlotY + 38;
-  const cClickX   = cSlotX + 3;
-  const cClickY   = cSlotY + 5;
+  const cClickX   = cSlotX + 5;
+  const cClickY   = cSlotY + 9;
 
   fakeCursor.style.transition = 'none';
   fakeCursor.style.left       = (window.innerWidth - 30) + 'px';
