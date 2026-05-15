@@ -28,6 +28,57 @@ installBtn.addEventListener('click', () => openModal(null));
 closeBtn.addEventListener('click',   () => overlay.classList.remove('open'));
 overlay.addEventListener('click', e => { if (e.target === overlay && isOverlayMouseDownBase) overlay.classList.remove('open'); });
 
+// ── Scroll fade hint ──
+(function() {
+  const modalBody = document.querySelector('.modal-body');
+  const modalBodyWrap = document.querySelector('.modal-body-wrap');
+
+  function updateFade() {
+    const hasMore = modalBody.scrollHeight - modalBody.scrollTop - modalBody.clientHeight > 4;
+    modalBodyWrap.classList.toggle('has-overflow', hasMore);
+  }
+
+  modalBody.addEventListener('scroll', updateFade, { passive: true });
+
+  overlay.addEventListener('transitionend', () => {
+    if (overlay.classList.contains('open')) updateFade();
+  });
+})();
+
+// ── Mobile swipe-down to close ──
+(function() {
+  const modal = document.getElementById('modal');
+  let startY = 0, currentY = 0, isDragging = false;
+
+  modal.addEventListener('touchstart', e => {
+    if (window.innerWidth > 640) return;
+    startY = e.touches[0].clientY;
+    currentY = startY;
+    isDragging = true;
+    modal.style.transition = 'none';
+  }, { passive: true });
+
+  modal.addEventListener('touchmove', e => {
+    if (!isDragging || window.innerWidth > 640) return;
+    currentY = e.touches[0].clientY;
+    const dy = Math.max(0, currentY - startY);
+    modal.style.transform = `translateY(${dy}px)`;
+  }, { passive: true });
+
+  modal.addEventListener('touchend', () => {
+    if (!isDragging || window.innerWidth > 640) return;
+    isDragging = false;
+    modal.style.transition = '';
+    const dy = currentY - startY;
+    if (dy > 80) {
+      overlay.classList.remove('open');
+      setTimeout(() => { modal.style.transform = ''; }, 400);
+    } else {
+      modal.style.transform = '';
+    }
+  });
+})();
+
 // ── Mobile hint ──
 const mobileHint = document.getElementById('mobileHint');
 const ua = navigator.userAgent;
@@ -57,6 +108,8 @@ function setupCopyBtn(id, code) {
   document.getElementById(id).addEventListener('click', () => {
     navigator.clipboard.writeText(code).then(() => {
       const btn = document.getElementById(id);
+      btn.classList.remove('copied');
+      void btn.offsetWidth;
       btn.classList.add('copied');
       btn.innerHTML = SVG_DONE;
       setTimeout(() => {
@@ -69,6 +122,40 @@ function setupCopyBtn(id, code) {
 
 setupCopyBtn('copyBtn', BOOKMARKLET_CODE);
 setupCopyBtn('copyBtnAndroid', BOOKMARKLET_CODE_ANDROID);
+
+const FEEDBACK_URL = 'https://script.google.com/macros/s/AKfycbz7_wZNjC2rDutW782xERIU1Q4N82zVXafsLwuF5LM0zpry4TKhODQF6dvi7f--_dNE6w/exec';
+
+document.getElementById('feedbackChip').addEventListener('click', () => {
+  document.querySelector('.feedback-section').classList.toggle('open');
+});
+
+document.getElementById('feedbackSend').addEventListener('click', () => {
+  const textEl = document.getElementById('feedbackText');
+  const btn = document.getElementById('feedbackSend');
+  const text = textEl.value.trim();
+  if (!text) return;
+  btn.disabled = true;
+  btn.textContent = '전송 중...';
+  fetch(FEEDBACK_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    body: new URLSearchParams({ message: text })
+  }).then(() => {
+    btn.textContent = '전송됐어요 ✓';
+    btn.classList.add('sent');
+    textEl.value = '';
+    setTimeout(() => {
+      btn.textContent = '보내기';
+      btn.classList.remove('sent');
+      btn.disabled = false;
+      document.querySelector('.feedback-section').classList.remove('open');
+    }, 2000);
+  }).catch(() => {
+    btn.textContent = '다시 시도해주세요';
+    btn.disabled = false;
+  });
+});
+
 
 // ── Drag demo animation ──
 const fakeCursor  = document.getElementById('fakeCursor');
