@@ -585,12 +585,25 @@ document.addEventListener('dragstart', (e) => {
   const btn = e.target.closest('.drag-btn');
   if (btn) {
     isDraggingBtn = true;
-    resetAnim(false); // 인자로 false를 주어 드래그 중에는 데모가 절대 다시 켜지지 않도록 완벽 정지
+    resetAnim(false); 
     setTimeout(() => btn.classList.add('is-dimmed'), 0);
     
-    const ghost = document.getElementById('custom-drag-ghost');
-    if (ghost && e.dataTransfer) {
-      e.dataTransfer.setDragImage(ghost, 55, 17);
+    if (e.dataTransfer) {
+      e.dataTransfer.effectAllowed = 'copy';
+      e.dataTransfer.dropEffect = 'copy';
+      e.dataTransfer.setData('text/uri-list', btn.href);
+      e.dataTransfer.setData('text/plain', btn.href);
+      
+      const ghost = document.getElementById('custom-drag-ghost');
+      if (ghost) {
+        const ghostWidth = ghost.offsetWidth || 110;
+        const ghostHeight = ghost.offsetHeight || 36;
+        
+        const offsetX = ghostWidth / 2;
+        const offsetY = (ghostHeight / 2) - 6;
+        
+        e.dataTransfer.setDragImage(ghost, offsetX, offsetY);
+      }
     }
   }
 }, true);
@@ -601,17 +614,24 @@ document.addEventListener('dragend', (e) => {
   if (btn) {
     isDraggingBtn = false;
     btn.classList.remove('is-pressed', 'is-dimmed');
+    
+    btn.classList.add('is-restoring');
+    setTimeout(() => btn.classList.remove('is-restoring'), 400);
+
     scheduleAnim(1500); // 드래그가 끝난 뒤(버튼을 놓은 뒤) 1.5초 후 자연스럽게 데모 재개
   }
 }, true);
 
 // 4. 🚫 금지 마크 대신 ➕ 복사 마크 띄우기 (버튼 끌고 있을 때만)
-document.addEventListener('dragover', (e) => {
+const allowDrop = (e) => {
   if (isDraggingBtn) {
     e.preventDefault();
-    e.dataTransfer.dropEffect = 'copy'; 
+    if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
   }
-}, true);
+};
+// dragover뿐만 아니라, 요소의 가장자리를 통과할 때 발생하는 dragenter도 차단해야 깜빡임이 없음
+document.addEventListener('dragover', allowDrop, true);
+document.addEventListener('dragenter', allowDrop, true);
 
 // 화면 빈 곳에 떨어뜨렸을 때 오작동 방지
 document.addEventListener('drop', (e) => {
