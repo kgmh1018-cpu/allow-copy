@@ -21,9 +21,12 @@ function openModal(autoFaqId) {
   }
 }
 
+let isOverlayMouseDownBase = false;
+overlay.addEventListener('mousedown', e => { isOverlayMouseDownBase = (e.target === overlay); });
+
 installBtn.addEventListener('click', () => openModal(null));
 closeBtn.addEventListener('click',   () => overlay.classList.remove('open'));
-overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
+overlay.addEventListener('click', e => { if (e.target === overlay && isOverlayMouseDownBase) overlay.classList.remove('open'); });
 
 // ── Mobile hint ──
 const mobileHint = document.getElementById('mobileHint');
@@ -516,9 +519,19 @@ function runAnim() {
   }, 10320);
 }
 
+let isOverlayMouseDownAnim = false;
+overlay.addEventListener('mousedown', e => { isOverlayMouseDownAnim = (e.target === overlay); });
+
 installBtn.addEventListener('click', () => resetAnim(false));
 closeBtn.addEventListener('click',   () => scheduleAnim(800));
-overlay.addEventListener('click', e => { if (e.target === overlay) scheduleAnim(800); });
+overlay.addEventListener('click', e => { if (e.target === overlay && isOverlayMouseDownAnim) scheduleAnim(800); });
+
+window.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && overlay.classList.contains('open')) {
+    overlay.classList.remove('open');
+    scheduleAnim(800);
+  }
+});
 
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) resetAnim(false);
