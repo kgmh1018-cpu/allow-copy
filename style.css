@@ -108,12 +108,6 @@ body {
   opacity: 0;
   transform: translate(-50%, -50%) scaleY(0);
 }
-@media (max-width: 520px) {
-  .bm-item:nth-last-child(-n+2) {
-    display: none;
-  }
-}
-
 .bm-sep {
   width: 0.5px;
   height: 16px;
