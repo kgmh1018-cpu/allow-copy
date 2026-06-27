@@ -178,8 +178,7 @@ function animCursorCurve(toX, toY, dur, easing, onTick, onDone) {
 const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)');
 
 function scheduleAnim(delay = ANIM_CYCLE) {
-  // 사용자가 설정을 껐거나, 이스터에그가 이미 발동되었다면 애니메이션 영구 중지
-  if (prefersReduced.matches || isUnlocked) return;
+  if (isUnlocked) return;
   clearTimeout(nextTimer);
   nextTimer = setTimeout(runAnim, delay);
 }
@@ -529,8 +528,7 @@ document.addEventListener('visibilitychange', () => {
 });
 
 prefersReduced.addEventListener('change', () => {
-  if (prefersReduced.matches) resetAnim(false);
-  else scheduleAnim(1500);
+  scheduleAnim(1500);
 });
 
 scheduleAnim(1400);
